@@ -1,0 +1,816 @@
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createRoot } from 'react-dom/client';
+import { 
+    LucideCopy, LucideCheck, LucideWallet, LucideArrowRight, 
+    LucideCoins, LucideRocket, LucideLayoutDashboard, LucideMenu, LucideX,
+    LucideShield, LucideGlobe, LucideZap, LucideBarChart3
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Solana Wallet Adapter Imports
+import { ConnectionProvider, WalletProvider, useWallet } from '@solana/wallet-adapter-react';
+import { WalletModalProvider, WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
+import { clusterApiUrl } from '@solana/web3.js';
+
+// Default styles that can be overridden by your app
+import '@solana/wallet-adapter-react-ui/styles.css';
+
+const MINT_ADDRESS = "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
+
+// --- Components ---
+
+// Error Boundary Component
+class ErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false, error: null };
+    }
+
+    static getDerivedStateFromError(error) {
+        return { hasError: true, error };
+    }
+
+    componentDidCatch(error, errorInfo) {
+        console.error("Uncaught error:", error, errorInfo);
+    }
+
+    render() {
+        if (this.state.hasError) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-black text-white p-4 text-center font-sans">
+                <div className="max-w-md w-full bg-white/5 border border-red-500/30 p-8 rounded-2xl backdrop-blur-xl">
+                    <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <LucideZap className="w-8 h-8 text-red-500" />
+                    </div>
+                    <h1 className="text-2xl font-bold text-white mb-2 font-orbitron">SYSTEM MALFUNCTION</h1>
+                    <p className="text-gray-400 mb-6 text-sm">The dark side clouded the connection. Attempting to re-establish link.</p>
+                    <div className="text-xs bg-black/50 p-4 rounded-lg text-left overflow-auto max-h-32 mb-6 font-mono text-red-400 border border-red-500/10">
+                        {this.state.error?.toString() || "Unknown Error"}
+                    </div>
+                    <button 
+                        onClick={() => window.location.reload()}
+                        className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-all"
+                    >
+                        REBOOT SYSTEM
+                    </button>
+                </div>
+            </div>
+        );
+        }
+
+        return this.props.children;
+    }
+}
+
+// Matrix Background
+const MatrixBackground = ({ opacity = 0.15, speed = 50, color = '#dc2626' }) => {
+    const canvasRef = useRef(null);
+    const [width, setWidth] = useState(window.innerWidth);
+    const [height, setHeight] = useState(window.innerHeight);
+
+    useEffect(() => {
+        const handleResize = () => {
+        setWidth(window.innerWidth);
+        setHeight(window.innerHeight);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*{[<|>]}';
+        const charArray = characters.split('');
+        const fontSize = 14;
+        const columns = Math.floor(width / fontSize);
+        
+        const drops = [];
+        for (let i = 0; i < columns; i++) {
+        drops[i] = 1;
+        }
+
+        let animationFrameId;
+        let lastTime = 0;
+
+        const draw = () => {
+        ctx.fillStyle = `rgba(5, 5, 5, ${0.1})`; // Fade effect
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.fillStyle = color;
+        ctx.font = `${fontSize}px monospace`;
+
+        for (let i = 0; i < drops.length; i++) {
+            const text = charArray[Math.floor(Math.random() * charArray.length)];
+            const x = i * fontSize;
+            const y = drops[i] * fontSize;
+
+            const isGlitch = Math.random() > 0.98;
+            ctx.fillStyle = isGlitch ? '#ffffff' : color;
+            ctx.fillText(text, x, y);
+            ctx.fillStyle = color;
+
+            if (y > height && Math.random() > 0.975) {
+            drops[i] = 0;
+            }
+
+            drops[i]++;
+        }
+        };
+        
+        const animate = (timestamp) => {
+            if (!lastTime) lastTime = timestamp;
+            const elapsed = timestamp - lastTime;
+
+            if (elapsed > speed) {
+                draw();
+                lastTime = timestamp;
+            }
+
+            animationFrameId = requestAnimationFrame(animate);
+        };
+
+        animate(0);
+
+        return () => {
+        cancelAnimationFrame(animationFrameId);
+        };
+    }, [width, height, opacity, speed, color]);
+
+    return (
+        <canvas 
+        ref={canvasRef} 
+        className="fixed top-0 left-0 z-0 pointer-events-none opacity-40 mix-blend-screen" 
+        />
+    );
+};
+
+// Reveal Animation Wrapper
+const Reveal = ({ children, delay = 0 }) => (
+    <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.6, delay, ease: "easeOut" }}
+    >
+        {children}
+    </motion.div>
+);
+
+// Helper component for copying text
+const CopyButton = ({ text, label }) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    return (
+        <button 
+            onClick={handleCopy}
+            className="flex items-center gap-2 bg-white/5 hover:bg-empire-red/20 border border-white/10 hover:border-empire-red/50 transition-all px-4 py-2 rounded-lg group backdrop-blur-md"
+        >
+            <span className="font-mono text-sm text-gray-300 group-hover:text-white truncate max-w-[150px] md:max-w-none">
+                {label ? label : text}
+            </span>
+            {copied ? (
+                <LucideCheck className="w-4 h-4 text-green-500" />
+            ) : (
+                <LucideCopy className="w-4 h-4 text-gray-400 group-hover:text-empire-red" />
+            )}
+        </button>
+    );
+};
+
+const Navigation = () => {
+    const [scrolled, setScrolled] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => setScrolled(window.scrollY > 50);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    const scrollTo = (id) => {
+        setMobileMenuOpen(false);
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    return (
+        <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-black/80 backdrop-blur-xl border-b border-white/10' : 'bg-transparent'}`}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between h-20">
+                    <div className="flex-shrink-0 flex items-center gap-2 cursor-pointer group" onClick={() => scrollTo('hero')}>
+                        <div className="w-10 h-10 bg-empire-red rounded-full flex items-center justify-center shadow-lg shadow-empire-red/20 group-hover:shadow-empire-red/40 transition-all">
+                            <span className="font-orbitron font-bold text-black text-lg">D</span>
+                        </div>
+                        <span className="font-orbitron font-bold text-xl tracking-wider text-white">
+                            DARK <span className="text-empire-red group-hover:text-white transition-colors">EMPIRE</span>
+                        </span>
+                    </div>
+                    
+                    {/* Desktop Menu */}
+                    <div className="hidden md:block">
+                        <div className="ml-10 flex items-baseline space-x-8">
+                            {['About', 'How to Buy', 'Stake', 'Roadmap', 'Tokenomics'].map((item) => (
+                                <button 
+                                    key={item}
+                                    onClick={() => scrollTo(item.toLowerCase().replace(/ /g, '-'))} 
+                                    className="text-gray-300 hover:text-white hover:bg-white/5 px-3 py-2 rounded-md text-sm font-medium transition-all hover:scale-105"
+                                >
+                                    {item}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="hidden md:flex items-center gap-4">
+                        <WalletMultiButton className="!bg-white/5 !border !border-white/10 hover:!bg-white/10 !rounded-full !font-bold !text-sm !transition-all !h-10" />
+                        <a 
+                            href={`https://raydium.io/swap/?inputCurrency=sol&outputCurrency=${MINT_ADDRESS}`} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="bg-empire-red hover:bg-red-600 text-white px-6 py-2 rounded-full font-bold transition-all shadow-lg shadow-empire-red/20 hover:shadow-empire-red/40 hover:-translate-y-0.5 text-sm h-10 flex items-center"
+                        >
+                            BUY DEMP
+                        </a>
+                    </div>
+
+                    {/* Mobile Menu Button */}
+                    <div className="md:hidden">
+                        <button 
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            className="text-gray-300 hover:text-white p-2"
+                        >
+                            {mobileMenuOpen ? <LucideX size={24} /> : <LucideMenu size={24} />}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Mobile Menu Dropdown */}
+            <AnimatePresence>
+                {mobileMenuOpen && (
+                    <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="md:hidden bg-black/95 backdrop-blur-xl border-b border-white/10 overflow-hidden"
+                    >
+                        <div className="px-4 pt-2 pb-6 space-y-2">
+                            {['About', 'How to Buy', 'Stake', 'Roadmap', 'Tokenomics'].map((item) => (
+                                <button 
+                                    key={item}
+                                    onClick={() => scrollTo(item.toLowerCase().replace(/ /g, '-'))} 
+                                    className="block w-full text-left text-gray-300 hover:text-white hover:bg-white/5 px-3 py-4 rounded-md text-base font-medium border-b border-white/5 last:border-0"
+                                >
+                                    {item}
+                                </button>
+                            ))}
+                            <div className="pt-4 flex flex-col gap-3">
+                                <div className="flex justify-center w-full">
+                                    <WalletMultiButton className="!w-full !justify-center !bg-white/5 !border !border-white/10 hover:!bg-white/10 !rounded-lg !font-bold !transition-all" />
+                                </div>
+                                <a 
+                                    href={`https://raydium.io/swap/?inputCurrency=sol&outputCurrency=${MINT_ADDRESS}`} 
+                                    target="_blank" 
+                                    rel="noreferrer"
+                                    className="w-full text-center bg-empire-red hover:bg-red-600 text-white px-6 py-3 rounded-lg font-bold transition-all shadow-lg shadow-empire-red/20"
+                                >
+                                    BUY DEMP
+                                </a>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </nav>
+    );
+};
+
+const Hero = () => {
+    return (
+        <section id="hero" className="relative min-h-screen flex items-center pt-20 overflow-hidden">
+            {/* Background Effects */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl opacity-30 pointer-events-none z-0">
+                <motion.div 
+                    animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
+                    transition={{ duration: 8, repeat: Infinity }}
+                    className="absolute top-20 left-1/4 w-[500px] h-[500px] bg-empire-red rounded-full blur-[150px]"
+                ></motion.div>
+                <motion.div 
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
+                    transition={{ duration: 10, repeat: Infinity, delay: 1 }}
+                    className="absolute bottom-20 right-1/4 w-[400px] h-[400px] bg-purple-900 rounded-full blur-[150px]"
+                ></motion.div>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full text-center">
+                <Reveal>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-sm">
+                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        <span className="text-xs font-mono text-gray-300">SYSTEM ONLINE: SOLANA MAINNET</span>
+                    </div>
+                </Reveal>
+
+                <Reveal delay={0.1}>
+                    <h1 className="text-5xl md:text-7xl lg:text-9xl font-orbitron font-black text-white mb-6 tracking-tight leading-none">
+                        JOIN THE <br className="hidden md:block" />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-b from-empire-red to-red-900 glow-text relative">
+                            EMPIRE
+                        </span>
+                    </h1>
+                </Reveal>
+
+                <Reveal delay={0.2}>
+                    <p className="mt-6 max-w-2xl mx-auto text-lg md:text-xl text-gray-400 mb-12 leading-relaxed">
+                        The Dark Empire Token ($DEMP) dominates the Solana ecosystem. 
+                        <span className="text-white font-bold"> Power</span>, <span className="text-white font-bold">Community</span>, and <span className="text-white font-bold">Future</span>. 
+                        Secure your position in the new order.
+                    </p>
+                </Reveal>
+                
+                <Reveal delay={0.3}>
+                    <div className="flex flex-col items-center justify-center gap-8">
+                        <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
+                            <a 
+                                href={`https://raydium.io/swap/?inputCurrency=sol&outputCurrency=${MINT_ADDRESS}`} 
+                                target="_blank" 
+                                rel="noreferrer"
+                                className="group bg-white text-black hover:bg-gray-200 px-8 py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]"
+                            >
+                                Buy on Raydium 
+                                <LucideArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            </a>
+                            <a 
+                                href="https://dexscreener.com/solana" 
+                                target="_blank" 
+                                rel="noreferrer"
+                                className="bg-white/5 border border-white/10 text-white hover:bg-white/10 px-8 py-4 rounded-xl font-bold text-lg transition-all backdrop-blur-md flex items-center justify-center gap-3"
+                            >
+                                <LucideBarChart3 className="w-5 h-5 text-empire-red" />
+                                View Chart
+                            </a>
+                        </div>
+
+                        <div className="bg-black/60 backdrop-blur-md p-1 pl-4 rounded-xl border border-white/10 flex flex-col md:flex-row items-center gap-4 max-w-full hover:border-empire-red/30 transition-colors">
+                            <div className="flex flex-col items-start gap-1">
+                                <span className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Contract Address</span>
+                                <span className="font-mono text-empire-gold text-sm md:text-base break-all">{MINT_ADDRESS}</span>
+                            </div>
+                            <CopyButton text={MINT_ADDRESS} label="Copy" />
+                        </div>
+                    </div>
+                </Reveal>
+            </div>
+        </section>
+    );
+};
+
+const SectionHeading = ({ title, subtitle, highlight }) => (
+    <div className="text-center mb-16">
+        <h2 className="text-3xl md:text-5xl font-orbitron font-bold text-white mb-4">
+            {title} <span className="text-empire-red">{highlight}</span>
+        </h2>
+        <p className="text-gray-400 max-w-2xl mx-auto">
+            {subtitle}
+        </p>
+    </div>
+);
+
+const About = () => {
+    return (
+        <section id="about" className="py-24 relative bg-black">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <Reveal>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                        <div className="space-y-6">
+                            <h2 className="text-4xl font-orbitron font-bold text-white">The Rise of the <span className="text-empire-red">Sith</span></h2>
+                            <p className="text-gray-400 text-lg leading-relaxed">
+                                In a blockchain galaxy filled with fleeting memes and weak hands, the Dark Empire rises as a symbol of absolute strength and unwavering community. We are not just a token; we are a movement.
+                            </p>
+                            <p className="text-gray-400 text-lg leading-relaxed">
+                                Built on Solana for light-speed transactions and minimal fees, $DEMP is designed for those who crave power and control over their financial destiny.
+                            </p>
+                            <div className="grid grid-cols-2 gap-4 pt-4">
+                                <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                                    <LucideShield className="w-8 h-8 text-empire-red mb-2" />
+                                    <h3 className="font-bold text-white">Unbreakable</h3>
+                                    <p className="text-sm text-gray-500">Secure & Audited</p>
+                                </div>
+                                <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                                    <LucideGlobe className="w-8 h-8 text-empire-red mb-2" />
+                                    <h3 className="font-bold text-white">Universal</h3>
+                                    <p className="text-sm text-gray-500">Global Community</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-empire-red blur-[100px] opacity-20"></div>
+                            <div className="relative bg-gradient-to-br from-white/10 to-transparent p-1 rounded-2xl border border-white/10 backdrop-blur-sm">
+                                <div className="bg-black/80 rounded-xl p-8 aspect-square flex items-center justify-center border border-white/5">
+                                    <LucideZap className="w-32 h-32 text-empire-red animate-pulse-slow" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </Reveal>
+            </div>
+        </section>
+    )
+}
+
+const HowToBuy = () => {
+    const steps = [
+        {
+            icon: <LucideWallet className="w-8 h-8 text-empire-red" />,
+            title: "Create Wallet",
+            description: "Download Phantom or Solflare. Secure your seed phrase.",
+            action: { label: "Get Phantom", url: "https://phantom.app/" }
+        },
+        {
+            icon: <LucideCoins className="w-8 h-8 text-empire-red" />,
+            title: "Get SOL",
+            description: "Purchase SOL from an exchange and send it to your wallet.",
+        },
+        {
+            icon: <LucideRocket className="w-8 h-8 text-empire-red" />,
+            title: "Connect",
+            description: "Go to Raydium and connect your wallet.",
+            action: { label: "Raydium", url: "https://raydium.io/swap" }
+        },
+        {
+            icon: <LucideArrowRight className="w-8 h-8 text-empire-red" />,
+            title: "Swap",
+            description: "Paste the $DEMP address and swap your SOL.",
+        }
+    ];
+
+    return (
+        <section id="how-to-buy" className="py-24 bg-empire-dark relative border-t border-white/5">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <Reveal>
+                    <SectionHeading title="HOW TO" highlight="BUY" subtitle="Follow these simple steps to join the ranks." />
+                </Reveal>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    {steps.map((step, index) => (
+                        <React.Fragment key={index}>
+                            <Reveal delay={index * 0.1}>
+                                <div className="relative h-full bg-white/5 hover:bg-white/10 p-6 rounded-2xl border border-white/5 hover:border-empire-red/50 transition-all duration-300 group flex flex-col">
+                                    <div className="absolute -top-4 -left-4 w-8 h-8 bg-empire-red rounded-lg flex items-center justify-center font-bold text-black border-2 border-black">
+                                        {index + 1}
+                                    </div>
+                                    <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform border border-white/10">
+                                        {step.icon}
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2 font-orbitron">
+                                        {step.title}
+                                    </h3>
+                                    <p className="text-gray-400 text-sm leading-relaxed mb-4 flex-grow">
+                                        {step.description}
+                                    </p>
+                                    {step.action && (
+                                        <a 
+                                            href={step.action.url} 
+                                            target="_blank" 
+                                            rel="noreferrer"
+                                            className="text-empire-red text-sm font-bold hover:text-white transition-colors flex items-center gap-1 mt-auto"
+                                        >
+                                            {step.action.label} <LucideArrowRight className="w-3 h-3" />
+                                        </a>
+                                    )}
+                                </div>
+                            </Reveal>
+                        </React.Fragment>
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+};
+
+const Stake = () => {
+    const { connected, publicKey } = useWallet();
+    const [stakedAmount, setStakedAmount] = useState(0);
+    const [isStaking, setIsStaking] = useState(false);
+
+    const handleStake = () => {
+        if (!connected) return;
+        setIsStaking(true);
+        // Simulate staking transaction
+        setTimeout(() => {
+            setStakedAmount(prev => prev + 1000);
+            setIsStaking(false);
+        }, 2000);
+    };
+
+    return (
+        <section id="stake" className="py-24 bg-black relative border-t border-white/5">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <Reveal>
+                    <SectionHeading title="STAKE" highlight="DEMP" subtitle="Lock your tokens. Earn the Empire's rewards." />
+                </Reveal>
+
+                <div className="max-w-2xl mx-auto">
+                    <Reveal delay={0.2}>
+                        <div className="bg-white/5 border border-white/10 p-8 rounded-2xl backdrop-blur-sm text-center">
+                            {!connected ? (
+                                <div className="flex flex-col items-center gap-6">
+                                    <LucideShield className="w-16 h-16 text-gray-500" />
+                                    <h3 className="text-2xl font-orbitron font-bold text-white">Connect Wallet to Stake</h3>
+                                    <p className="text-gray-400">You must authenticate your identity to access the staking terminal.</p>
+                                    <WalletMultiButton className="!bg-empire-red hover:!bg-red-600 !transition-all !rounded-lg !font-bold" />
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center gap-6">
+                                    <div className="w-full flex justify-between items-center bg-black/50 p-4 rounded-lg border border-white/5">
+                                        <span className="text-gray-400">Wallet</span>
+                                        <span className="font-mono text-empire-gold">{publicKey?.toBase58().slice(0, 4)}...{publicKey?.toBase58().slice(-4)}</span>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-4 w-full">
+                                        <div className="bg-black/50 p-4 rounded-lg border border-white/5 flex flex-col items-center">
+                                            <span className="text-gray-500 text-sm mb-1">Available Balance</span>
+                                            <span className="text-2xl font-bold font-orbitron">-- DEMP</span>
+                                        </div>
+                                        <div className="bg-black/50 p-4 rounded-lg border border-white/5 flex flex-col items-center">
+                                            <span className="text-gray-500 text-sm mb-1">Total Staked</span>
+                                            <span className="text-2xl font-bold font-orbitron text-empire-red">{stakedAmount} DEMP</span>
+                                        </div>
+                                    </div>
+
+                                    <button 
+                                        onClick={handleStake}
+                                        disabled={isStaking}
+                                        className="w-full py-4 bg-empire-red hover:bg-red-600 disabled:bg-red-900 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2"
+                                    >
+                                        {isStaking ? (
+                                            <>
+                                                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                                PROCESSING...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <LucideZap className="w-5 h-5" />
+                                                STAKE 1,000 DEMP (DEMO)
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </Reveal>
+                </div>
+            </div>
+        </section>
+    );
+};
+
+const Roadmap = () => {
+    const phases = [
+        {
+            phase: "PHASE 01",
+            title: "THE AWAKENING",
+            items: ["Token Launch on Solana", "Website & Branding", "Community Formation", "Initial Marketing"]
+        },
+        {
+            phase: "PHASE 02",
+            title: "THE EXPANSION",
+            items: ["CoinGecko & CMC", "Strategic Partnerships", "Influencer Campaigns", "1,000+ Holders"]
+        },
+        {
+            phase: "PHASE 03",
+            title: "THE CONQUEST",
+            items: ["CEX Listings", "Staking Beta", "Empire NFT Drop", "Global Awareness"]
+        },
+        {
+            phase: "PHASE 04",
+            title: "TOTAL DOMINATION",
+            items: ["Tier 1 Exchanges", "Dark Empire DAO", "Cross-Chain", "Ecosystem Fund"]
+        }
+    ];
+
+    return (
+        <section id="roadmap" className="py-24 bg-empire-dark relative border-t border-white/5 overflow-hidden">
+            {/* Background glow */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-empire-red rounded-full blur-[200px] opacity-5 pointer-events-none"></div>
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <Reveal>
+                    <SectionHeading title="EMPIRE" highlight="ROADMAP" subtitle="The path to absolute power is charted." />
+                </Reveal>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    {phases.map((phase, index) => (
+                        <React.Fragment key={index}>
+                            <Reveal delay={index * 0.15}>
+                                <div className="h-full bg-white/5 border border-white/10 p-8 rounded-2xl relative overflow-hidden group hover:border-empire-red/50 transition-all duration-500 hover:-translate-y-2">
+                                    <div className="absolute top-0 right-0 p-4 opacity-5 font-black text-8xl text-gray-500 select-none group-hover:text-empire-red group-hover:opacity-10 transition-all duration-500">
+                                        {index + 1}
+                                    </div>
+                                    
+                                    <div className="relative z-10">
+                                        <div className="inline-block px-3 py-1 bg-empire-red/10 text-empire-red text-xs font-bold rounded-full mb-4 border border-empire-red/20">
+                                            {phase.phase}
+                                        </div>
+                                        <h3 className="text-xl font-bold text-white mb-6 font-orbitron group-hover:text-empire-red transition-colors">{phase.title}</h3>
+                                        
+                                        <ul className="space-y-4">
+                                            {phase.items.map((item, i) => (
+                                                <li key={i} className="flex items-start gap-3 text-gray-400 text-sm group/item">
+                                                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-600 group-hover/item:bg-empire-red transition-colors shrink-0"></div>
+                                                    <span className="group-hover/item:text-gray-300 transition-colors">{item}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                    <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-empire-red/50 to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+                                </div>
+                            </Reveal>
+                        </React.Fragment>
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+};
+
+const Tokenomics = () => {
+    return (
+        <section id="tokenomics" className="py-24 bg-black border-t border-white/5 relative">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <Reveal>
+                    <SectionHeading title="EMPIRE" highlight="ECONOMICS" subtitle="Transparent. Fair. Built to last." />
+                </Reveal>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                    {[
+                        { label: "Total Supply", value: "1,000,000,000", sub: "1 Billion" },
+                        { label: "Tax", value: "0/0", sub: "Buy / Sell" },
+                        { label: "Liquidity", value: "BURNED", sub: "Forever" }
+                    ].map((stat, i) => (
+                        <React.Fragment key={i}>
+                            <Reveal delay={i * 0.1}>
+                                <div className="p-8 border border-white/10 rounded-2xl bg-white/5 hover:bg-white/10 transition-all text-center group relative overflow-hidden">
+                                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-empire-red/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div className="text-gray-400 uppercase tracking-widest text-xs font-bold mb-2">{stat.label}</div>
+                                    <div className="text-4xl md:text-5xl font-black font-orbitron text-white mb-2 group-hover:scale-110 transition-transform duration-300">
+                                        {stat.value}
+                                    </div>
+                                    <div className="text-empire-red font-mono text-sm">{stat.sub}</div>
+                                </div>
+                            </Reveal>
+                        </React.Fragment>
+                    ))}
+                </div>
+
+                <Reveal delay={0.3}>
+                    <div className="max-w-3xl mx-auto">
+                        <div className="bg-black border border-white/10 rounded-2xl p-8 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-empire-red"></div>
+                            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                                <div className="text-center md:text-left">
+                                    <h3 className="text-2xl font-orbitron font-bold text-white mb-2">Vesting Schedule</h3>
+                                    <p className="text-gray-400">The Dark Empire does not wait.</p>
+                                </div>
+                                <div className="flex-grow w-full md:w-auto">
+                                    <div className="flex justify-between text-sm mb-2">
+                                        <span className="text-white font-bold">Circulating Supply</span>
+                                        <span className="text-empire-red font-mono">100%</span>
+                                    </div>
+                                    <div className="h-4 bg-gray-900 rounded-full overflow-hidden border border-white/10">
+                                        <motion.div 
+                                            initial={{ width: 0 }}
+                                            whileInView={{ width: "100%" }}
+                                            transition={{ duration: 1.5, ease: "easeOut" }}
+                                            className="h-full bg-gradient-to-r from-red-900 to-empire-red"
+                                        ></motion.div>
+                                    </div>
+                                    <p className="text-right text-xs text-gray-500 mt-2">No team tokens. No hidden wallets.</p>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div className="flex items-center gap-4 text-xs text-gray-500 font-mono">
+                                    <div className="flex items-center gap-1.5">
+                                        <LucideCheck className="w-3 h-3 text-green-500" />
+                                        <span>Mint Revoked</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <LucideCheck className="w-3 h-3 text-green-500" />
+                                        <span>Freeze Disabled</span>
+                                    </div>
+                                </div>
+                                <a 
+                                    href={`https://solscan.io/token/${MINT_ADDRESS}`}
+                                    target="_blank" 
+                                    rel="noreferrer"
+                                    className="flex items-center gap-2 text-xs font-bold text-empire-red hover:text-white transition-colors uppercase tracking-widest group"
+                                >
+                                    <LucideShield className="w-3 h-3 group-hover:scale-110 transition-transform" />
+                                    Verify on Solscan
+                                    <LucideArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </Reveal>
+            </div>
+        </section>
+    );
+};
+
+const Footer = () => {
+    return (
+        <footer className="bg-black py-12 border-t border-white/10">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+                    <div className="text-center md:text-left">
+                        <div className="flex items-center gap-2 justify-center md:justify-start mb-2">
+                            <div className="w-6 h-6 bg-empire-red rounded-full flex items-center justify-center">
+                                <span className="font-orbitron font-bold text-black text-xs">D</span>
+                            </div>
+                            <h3 className="font-orbitron font-bold text-xl text-white">DARK <span className="text-empire-red">EMPIRE</span></h3>
+                        </div>
+                        <p className="text-gray-500 text-sm">© 2024 Dark Empire Token. All rights reserved.</p>
+                    </div>
+                    
+                    <div className="flex gap-4">
+                        {[
+                            { icon: "twitter", url: "#" },
+                            { icon: "telegram", url: "#" },
+                            { icon: "discord", url: "#" }
+                        ].map((social, i) => (
+                            <a 
+                                key={i}
+                                href={social.url} 
+                                className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-empire-red hover:border-empire-red transition-all duration-300"
+                            >
+                                <i className={`fa-brands fa-${social.icon}`}></i>
+                            </a>
+                        ))}
+                        <a 
+                            href={`https://solscan.io/token/${MINT_ADDRESS}`} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-empire-red hover:border-empire-red transition-all duration-300"
+                            title="View on Solscan"
+                        >
+                            <LucideShield className="w-4 h-4" />
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    );
+};
+
+const App = () => {
+    // Solana Wallet Configuration
+    const network = 'mainnet-beta';
+    const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+    const wallets = useMemo(
+        () => [
+            new PhantomWalletAdapter(),
+            new SolflareWalletAdapter(),
+        ],
+        []
+    );
+
+    return (
+        <ConnectionProvider endpoint={endpoint}>
+            <WalletProvider wallets={wallets} autoConnect>
+                <WalletModalProvider>
+                    <div className="min-h-screen text-white font-sans selection:bg-empire-red selection:text-white relative bg-black">
+                        <MatrixBackground />
+                        <div className="relative z-10">
+                            <Navigation />
+                            <Hero />
+                            <About />
+                            <HowToBuy />
+                            <Stake />
+                            <Roadmap />
+                            <Tokenomics />
+                            <Footer />
+                        </div>
+                    </div>
+                </WalletModalProvider>
+            </WalletProvider>
+        </ConnectionProvider>
+    );
+};
+
+export default App;
