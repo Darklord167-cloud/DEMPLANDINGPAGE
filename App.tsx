@@ -7,6 +7,9 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Vercel Analytics
+import { Analytics } from '@vercel/analytics/react';
+
 // Solana Wallet Adapter Imports
 import { ConnectionProvider, WalletProvider, useWallet } from '@solana/wallet-adapter-react';
 import { WalletModalProvider, WalletMultiButton } from '@solana/wallet-adapter-react-ui';
@@ -807,6 +810,7 @@ const App = () => {
                             <Footer />
                         </div>
                     </div>
+                    <Analytics />
                 </WalletModalProvider>
             </WalletProvider>
         </ConnectionProvider>
