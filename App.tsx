@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 // Vercel Analytics
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 // Solana Wallet Adapter Imports
 import { ConnectionProvider, WalletProvider, useWallet } from '@solana/wallet-adapter-react';
@@ -811,6 +812,7 @@ const App = () => {
                         </div>
                     </div>
                     <Analytics />
+                    <SpeedInsights />
                 </WalletModalProvider>
             </WalletProvider>
         </ConnectionProvider>
