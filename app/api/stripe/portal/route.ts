@@ -2,9 +2,14 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { storage } from "@/server/storage";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-01-27.acacia" as any,
-});
+function getStripeClient() {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("STRIPE_SECRET_KEY is missing");
+  }
+  return new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2025-01-27.acacia" as any,
+  });
+}
 
 export async function POST(req: Request) {
   try {
@@ -26,6 +31,7 @@ export async function POST(req: Request) {
       );
     }
 
+    const stripe = getStripeClient();
     const session = await stripe.billingPortal.sessions.create({
       customer: user.stripeCustomerId,
       return_url: returnUrl || `${req.headers.get("origin")}/credits`,
