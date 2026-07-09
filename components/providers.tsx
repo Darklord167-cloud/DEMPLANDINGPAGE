@@ -13,8 +13,11 @@ import '@solana/wallet-adapter-react-ui/styles.css';
 import { AuthProvider } from "@/lib/auth-context";
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  // Connect to our secure RPC load balancer to mask Alchemy/Helius keys & handle fallback
-  const endpoint = "/api/rpc";
+  const endpoint = typeof window !== "undefined"
+    ? `${window.location.origin}/api/rpc`
+    : process.env.NEXT_PUBLIC_SITE_URL 
+      ? `${process.env.NEXT_PUBLIC_SITE_URL}/api/rpc`
+      : "http://localhost:3000/api/rpc";
   // The Wallet Adapter standard automatically discovers wallets that implement the standard (like Phantom, Solflare, etc)
   const wallets = useMemo(() => [], []);
 
