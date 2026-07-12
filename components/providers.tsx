@@ -13,11 +13,14 @@ import '@solana/wallet-adapter-react-ui/styles.css';
 import { AuthProvider } from "@/lib/auth-context";
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  let siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  if (!siteUrl.startsWith("http://") && !siteUrl.startsWith("https://")) {
+    siteUrl = `https://${siteUrl}`;
+  }
+  
   const endpoint = typeof window !== "undefined"
     ? `${window.location.origin}/api/rpc`
-    : process.env.NEXT_PUBLIC_SITE_URL 
-      ? `${process.env.NEXT_PUBLIC_SITE_URL}/api/rpc`
-      : "http://localhost:3000/api/rpc";
+    : `${siteUrl}/api/rpc`;
   // The Wallet Adapter standard automatically discovers wallets that implement the standard (like Phantom, Solflare, etc)
   const wallets = useMemo(() => [], []);
 
