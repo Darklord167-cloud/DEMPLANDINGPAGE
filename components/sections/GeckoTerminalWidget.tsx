@@ -6,10 +6,7 @@ import { Loader2, TrendingUp, Maximize2 } from "lucide-react";
 export function GeckoTerminalWidget() {
   const [loading, setLoading] = useState(true);
   
-  // Note: GeckoTerminal requires a POOL address for embedding, NOT a token address.
-  // We swapped to DexScreener as it robustly supports direct Token Address embedding.
-  const tokenAddress = "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
-  const embedUrl = `https://dexscreener.com/solana/${tokenAddress}?embed=1&theme=dark&info=0`;
+  const embedUrl = "https://www.geckoterminal.com/solana/pools/6Higx2gdaqYaukrkNomp1pVJX8uQNHAhavLE7qFnHjYD?embed=1&info=1&swaps=1&grayscale=0&light_chart=0&chart_type=price&resolution=15m";
 
   return (
     <div className="w-full bg-[#0a0a0a] border border-[#b026ff]/30 rounded-2xl overflow-hidden shadow-[0_0_30px_rgba(176,38,255,0.05)]">
@@ -23,7 +20,7 @@ export function GeckoTerminalWidget() {
           </span>
         </div>
         <a 
-          href={`https://dexscreener.com/solana/${tokenAddress}`}
+          href="https://www.geckoterminal.com/solana/pools/6Higx2gdaqYaukrkNomp1pVJX8uQNHAhavLE7qFnHjYD"
           target="_blank"
           rel="noreferrer"
           className="text-zinc-500 hover:text-[#b026ff] transition-colors"
@@ -44,12 +41,13 @@ export function GeckoTerminalWidget() {
         )}
         
         <iframe
+          id="geckoterminal-embed"
           src={embedUrl}
-          title="Dark Empire Live Chart"
+          title="Embed DEMP / USDC"
           className="w-full h-full border-0 select-none"
           loading="lazy"
           allow="clipboard-write"
-          sandbox="allow-scripts allow-same-origin allow-popups"
+          allowFullScreen
           onLoad={() => setLoading(false)}
         />
       </div>
