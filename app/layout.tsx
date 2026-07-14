@@ -7,7 +7,6 @@ import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
@@ -79,7 +78,6 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
           </div>
         </Providers>
         <SpeedInsights />
-        <Analytics />
       </body>
     </html>
   );
