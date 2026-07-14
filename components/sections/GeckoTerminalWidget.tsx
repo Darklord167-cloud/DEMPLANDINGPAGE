@@ -40,16 +40,19 @@ export function GeckoTerminalWidget() {
           </div>
         )}
         
-        <iframe
-          id="geckoterminal-embed"
-          src={embedUrl}
-          title="Embed DEMP / USDC"
-          className="w-full h-full border-0 select-none"
-          loading="lazy"
-          allow="clipboard-write"
-          allowFullScreen
-          onLoad={() => setLoading(false)}
-        />
+        <div style={{ width: "100%", height: "600px" }}>
+          <iframe
+            height="100%"
+            width="100%"
+            id="geckoterminal-embed"
+            title="Embed DEMP / USDC"
+            src="https://www.geckoterminal.com/solana/pools/6Higx2gdaqYaukrkNomp1pVJX8uQNHAhavLE7qFnHjYD?embed=1&info=1&swaps=1&grayscale=0&light_chart=0&chart_type=price&resolution=15m"
+            frameBorder="0"
+            allow="clipboard-write"
+            allowFullScreen
+            onLoad={() => setLoading(false)}
+          />
+        </div>
       </div>
     </div>
   );
