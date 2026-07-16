@@ -1,14 +1,14 @@
 import { Hero } from "@/components/sections/Hero";
 import { StatsTicker } from "@/components/sections/StatsTicker";
 import { AdminTeaser } from "@/components/sections/AdminTeaser";
-import { GeckoTerminalWidget } from "@/components/GeckoTerminalWidget";
+import { JupiterSwapWidget } from "@/components/JupiterSwapWidget";
 
 export default function Home() {
   return (
     <>
       <Hero />
       <div className="container mx-auto px-4 py-8">
-        <GeckoTerminalWidget />
+        <JupiterSwapWidget />
       </div>
       <StatsTicker />
       <AdminTeaser />

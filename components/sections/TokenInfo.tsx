@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
-import { GeckoTerminalWidget } from "./GeckoTerminalWidget";
+import { JupiterSwapWidget } from "@/components/JupiterSwapWidget";
 
 const SUPPLY_ENDPOINT = "https://empire-token-supply.replit.app/api/supply.json";
 
@@ -124,7 +124,7 @@ export function TokenInfo() {
           </motion.div>
         </div>
 
-        {/* GeckoTerminal Widget Section */}
+        {/* Jupiter Swap Widget Section */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -133,13 +133,13 @@ export function TokenInfo() {
           className="mt-20 max-w-5xl mx-auto"
         >
           <div className="text-center mb-10">
-            <h4 className="text-2xl font-heading font-bold text-white uppercase tracking-wider mb-2">Live Market Data</h4>
+            <h4 className="text-2xl font-heading font-bold text-white uppercase tracking-wider mb-2">Liquidity Bridge & Instant Swap</h4>
             <p className="text-muted-foreground font-mono text-sm max-w-2xl mx-auto">
-              Real-time analytics and liquidity pool tracking provided by GeckoTerminal.
+              Swap any Solana assets directly for $DEMP using Jupiter&apos;s optimized routing engine.
             </p>
           </div>
           
-          <GeckoTerminalWidget />
+          <JupiterSwapWidget />
         </motion.div>
 
         {/* Tokenomics Section */}
