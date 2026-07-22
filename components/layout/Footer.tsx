@@ -138,8 +138,11 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-white/10 pt-8 mt-8 flex flex-col md:flex-row items-center justify-between text-sm text-muted-foreground">
+        <div className="border-t border-white/10 pt-8 mt-8 flex flex-col md:flex-row items-center justify-between text-sm text-muted-foreground gap-4">
           <p className="font-mono text-xs text-white/50">&copy; {new Date().getFullYear()} Dark Empire Lords LLC. All rights reserved.</p>
+          <div className="flex gap-4">
+            <a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
+          </div>
           <div className="flex gap-6 mt-4 md:mt-0 font-mono text-xs items-center" suppressHydrationWarning>
             <div className="flex items-center gap-2">
               <span className="relative flex h-2 w-2">
