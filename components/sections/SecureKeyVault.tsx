@@ -140,8 +140,8 @@ export function SecureKeyVault() {
             Authentication Required: Ensure identity sync with the Trading Engine.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <Button onClick={signInWithGoogle} className="w-full font-bold bg-primary hover:bg-primary/80">
+        <CardContent className="space-y-4 flex justify-center">
+          <Button onClick={signInWithGoogle} variant="obsidian" className="w-full max-w-md h-12 text-xs font-mono font-bold tracking-widest rounded-xl">
             CONNECT WITH GOOGLE (SYNC TRADING ENGINE)
           </Button>
         </CardContent>
@@ -231,7 +231,8 @@ export function SecureKeyVault() {
         <Button 
           disabled={isSaving || isLoadingKeys} 
           onClick={saveKeys}
-          className="font-rajdhani font-bold tracking-widest bg-primary hover:bg-primary/80 w-full sm:w-auto"
+          variant="obsidian"
+          className="w-full sm:w-auto px-6 h-11 text-xs font-mono font-bold tracking-widest rounded-xl"
         >
           {isSaving ? (
              <><Loader2 className="animate-spin mr-2 h-4 w-4" /> ENCRYPTING...</>

@@ -1,14 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Script from "next/script";
 import { Loader2, ArrowLeftRight, ExternalLink, Copy, CheckCircle, ShieldCheck, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function JupiterSwapWidget() {
   const [loading, setLoading] = useState(true);
+  const [showFallback, setShowFallback] = useState(false);
   const [copied, setCopied] = useState(false);
   const contractAddress = "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
+
+  // Fallback trigger after 4s if widget initialization takes longer
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowFallback(true);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(contractAddress);
@@ -17,39 +26,38 @@ export function JupiterSwapWidget() {
   };
 
   const handleJupiterInit = () => {
-    if ((window as any).Jupiter) {
+    if (window.Jupiter) {
       try {
-        (window as any).Jupiter.init({
+        window.Jupiter.init({
           displayMode: "integrated",
           integratedTargetId: "jupiter-terminal",
           strictTokenList: false,
-          // Note: No RPC 'endpoint' is needed anymore! The new Jupiter Plugin runs RPC-less.
           formProps: {
             initialInputMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // USDC
             initialOutputMint: contractAddress, // $DEMP
           },
           theme: "dark",
         });
-        // Remove loader once the plugin is successfully initialized
         setLoading(false);
       } catch (err) {
         console.error("Error initializing Jupiter Plugin:", err);
         setLoading(false);
+        setShowFallback(true);
       }
     }
   };
 
   return (
     <>
-      {/* 
-        Next.js Native Script Loader: Loads the modern Jupiter Plugin (Replaces the deprecated Terminal).
-        onReady triggers automatically on mount and ensures the window.Jupiter object is ready.
-      */}
       <Script
         src="https://plugin.jup.ag/plugin-v1.js"
         strategy="afterInteractive"
         data-preload
         onReady={handleJupiterInit}
+        onError={() => {
+          setLoading(false);
+          setShowFallback(true);
+        }}
       />
 
       <div className="w-full bg-[#0a0a0a] border border-[#b026ff]/30 rounded-2xl overflow-hidden shadow-[0_0_30px_rgba(176,38,255,0.05)]">
@@ -174,10 +182,9 @@ export function JupiterSwapWidget() {
             </div>
           </div>
 
-          {/* Right column: Interactive Jupiter Swap terminal */}
+          {/* Right column: Interactive Jupiter Swap terminal or Fallback */}
           <div className="md:col-span-7 relative flex items-center justify-center p-4 bg-black/60 min-h-[500px]">
-            {/* Loading overlay */}
-            {loading && (
+            {loading && !showFallback && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505]/95 gap-3 z-10 rounded-r-2xl">
                 <Loader2 className="w-8 h-8 animate-spin text-[#b026ff]" />
                 <span className="font-mono text-xs text-[#b026ff] uppercase tracking-widest animate-pulse">
@@ -186,8 +193,38 @@ export function JupiterSwapWidget() {
               </div>
             )}
             
-            <div className="w-full max-w-[420px] mx-auto min-h-[480px]">
+            <div className="w-full max-w-[420px] mx-auto min-h-[480px] flex flex-col justify-center items-center">
               <div id="jupiter-terminal" className="w-full h-full text-white" />
+
+              {showFallback && loading && (
+                <div className="p-8 rounded-2xl border border-purple-500/30 bg-purple-950/20 backdrop-blur-xl text-center space-y-6 max-w-sm">
+                  <div className="w-14 h-14 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center mx-auto text-purple-400">
+                    <ArrowLeftRight className="w-7 h-7 animate-pulse" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-display font-bold text-white uppercase tracking-wider">
+                      Jupiter DEX Router
+                    </h4>
+                    <p className="text-xs text-zinc-400 font-mono mt-2 leading-relaxed">
+                      Direct DEX swap terminal ready. Click below to launch execution on Jupiter Protocol.
+                    </p>
+                  </div>
+                  <Button
+                    variant="obsidian"
+                    asChild
+                    className="w-full h-12 flex items-center justify-center gap-2 max-w-xs mx-auto"
+                  >
+                    <a
+                      href={`https://jup.ag/swap/USDC-${contractAddress}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <span>LAUNCH JUPITER SWAP</span>
+                      <ExternalLink className="w-4 h-4 text-amber-400" />
+                    </a>
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 

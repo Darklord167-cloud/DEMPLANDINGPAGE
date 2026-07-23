@@ -3,12 +3,11 @@ import Stripe from "stripe";
 import { storage } from "@/server/storage";
 
 function getStripeClient() {
-  if (!process.env.STRIPE_SECRET_KEY) {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) {
     throw new Error("STRIPE_SECRET_KEY is missing");
   }
-  return new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2025-01-27.acacia" as any,
-  });
+  return new Stripe(secretKey);
 }
 
 export async function POST(req: Request) {
@@ -23,7 +22,7 @@ export async function POST(req: Request) {
     }
 
     const user = await storage.getUserByWalletAddress(walletAddress);
-    
+
     if (!user || !user.stripeCustomerId) {
       return NextResponse.json(
         { message: "No payment history found for this account. Make a purchase first." },
@@ -31,17 +30,19 @@ export async function POST(req: Request) {
       );
     }
 
+    const origin = req.headers.get("origin") || "";
     const stripe = getStripeClient();
     const session = await stripe.billingPortal.sessions.create({
       customer: user.stripeCustomerId,
-      return_url: returnUrl || `${req.headers.get("origin")}/credits`,
+      return_url: returnUrl || `${origin}/credits`,
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "Internal Server Error";
     console.error("Stripe Portal Error:", err);
     return NextResponse.json(
-      { message: err.message || "Internal Server Error" },
+      { message: errorMessage },
       { status: 500 }
     );
   }

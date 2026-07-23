@@ -11,6 +11,7 @@ import { useMemo } from "react";
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 import { AuthProvider } from "@/lib/auth-context";
+import { VipProvider } from "@/lib/vip-context";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   let siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -31,9 +32,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <QueryClientProvider client={queryClient}>
             <TooltipProvider>
               <AuthProvider>
-                {children}
-                <Toaster />
-                <SonnerToaster position="top-right" theme="dark" richColors />
+                <VipProvider>
+                  {children}
+                  <Toaster />
+                  <SonnerToaster position="top-right" theme="dark" richColors />
+                </VipProvider>
               </AuthProvider>
             </TooltipProvider>
           </QueryClientProvider>

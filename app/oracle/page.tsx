@@ -10,6 +10,10 @@ import { toast } from "sonner";
 import Link from "next/link";
 import bs58 from "bs58";
 
+import { useVipTier } from "@/lib/vip-context";
+import { VipBadge } from "@/components/vip/VipBadge";
+import { OracleSphere } from "@/components/sections/OracleSphere";
+
 function TypewriterText({ 
   content, 
   isOracle,
@@ -85,6 +89,7 @@ function TypewriterText({
 
 export default function OraclePage() {
   const { publicKey, connected, signMessage } = useWallet();
+  const { tier } = useVipTier();
   const [profile, setProfile] = useState<any>(null);
   const [messages, setMessages] = useState<{ role: "user" | "oracle"; content: string }[]>([
     { role: "oracle", content: "Oracle online. Let's make some money and scale your digital empire. State your objective." },
@@ -258,7 +263,7 @@ export default function OraclePage() {
 
       {/* Title Area */}
       <div className="absolute top-24 z-20 flex flex-col items-center">
-        <div className="flex items-center gap-4 mb-2">
+        <div className="flex items-center gap-3 mb-2">
           {connected && profile && (
             <Link href="/credits">
               <motion.div 
@@ -270,24 +275,21 @@ export default function OraclePage() {
               </motion.div>
             </Link>
           )}
+          <Link href="/vip">
+            <VipBadge tier={tier} size="sm" showIcon />
+          </Link>
         </div>
         <div className="mb-4 border-2 border-primary rounded-xl p-2.5 shadow-[0_0_20px_rgba(168,85,247,0.4)] backdrop-blur-sm bg-black/50">
            <TerminalSquare className="h-10 w-10 text-primary drop-shadow-[0_0_10px_rgba(168,85,247,1)]" />
         </div>
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-white uppercase tracking-[0.2em] md:tracking-[0.3em] whitespace-nowrap drop-shadow-[0_0_20px_rgba(168,85,247,1)]">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-white uppercase tracking-[0.15em] sm:tracking-[0.2em] md:tracking-[0.3em] drop-shadow-[0_0_20px_rgba(168,85,247,1)]">
           The Oracle
         </h1>
       </div>
 
       {/* The Core / Sphere */}
       <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none mt-10">
-        <div className={`oracle-structure ${isCoreActive ? 'oracle-structure-active' : 'oracle-structure-idle'}`}>
-          <div className="oracle-inner-sphere" />
-          <div className="oracle-ring oracle-ring-1" />
-          <div className="oracle-ring oracle-ring-2" />
-          <div className="oracle-ring oracle-ring-3" />
-          <div className="oracle-particles" />
-        </div>
+        <OracleSphere isActive={isCoreActive} />
       </div>
 
       {/* Chat Interface */}

@@ -1,10 +1,11 @@
 "use client";
 
+import React from "react";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ChevronDown } from "lucide-react";
 
-export function Hero() {
+export const Hero = React.memo(function Hero() {
   return (
     <section id="overview" className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background - using a placeholder CSS gradient structure with blur for the cyberpunk effect */}
@@ -21,7 +22,7 @@ export function Hero() {
       </div>
 
       {/* Content */}
-      <div className="container relative z-20 px-6 pt-20 text-center">
+      <div className="container mx-auto relative z-20 px-6 pt-20 text-center">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -43,7 +44,7 @@ export function Hero() {
               ]
             }}
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            className="font-display text-5xl md:text-7xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/50 mb-6 tracking-tight"
+            className="font-display text-4xl sm:text-6xl md:text-7xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/50 mb-6 tracking-tight break-words"
           >
             DARK EMPIRE
           </motion.h1>
@@ -81,4 +82,5 @@ export function Hero() {
       </motion.div>
     </section>
   );
-}
+});
+

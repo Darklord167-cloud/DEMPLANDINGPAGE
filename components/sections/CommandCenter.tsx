@@ -155,12 +155,13 @@ export function CommandCenter() {
             Biometric credentials required. Authenticate to route a secure tunnel node into the Trading Engine.
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-8 pt-2">
+        <CardContent className="p-8 pt-2 flex justify-center">
           <Button 
             onClick={signInWithGoogle} 
-            className="w-full h-14 bg-gradient-to-r from-[#8a1cce] to-[#b026ff] hover:from-[#b026ff] hover:to-[#d466ff] text-white font-display font-bold uppercase text-sm tracking-widest rounded-xl shadow-[0_0_20px_rgba(176,38,255,0.3)] transition-all"
+            variant="obsidian"
+            className="w-full max-w-sm mx-auto h-12 text-xs font-mono font-bold uppercase tracking-widest rounded-xl"
           >
-            Connect to Trading Engine
+            CONNECT TO TRADING ENGINE
           </Button>
         </CardContent>
       </Card>

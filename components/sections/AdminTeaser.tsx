@@ -16,7 +16,7 @@ export function AdminTeaser() {
                 </div>
                 <h3 className="text-3xl font-display font-bold text-white mb-2">RESTRICTED ACCESS</h3>
                 <p className="text-muted-foreground font-mono mb-8">ADMINISTRATIVE DASHBOARD & ANALYTICS</p>
-                <Button variant="outline" className="border-primary/50 text-primary hover:bg-primary/20">
+                <Button variant="obsidian" className="w-full max-w-xs h-11 text-xs font-mono font-bold tracking-widest rounded-xl">
                     REQUEST ACCESS
                 </Button>
             </div>

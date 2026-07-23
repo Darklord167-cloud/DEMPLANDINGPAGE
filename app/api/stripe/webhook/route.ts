@@ -4,59 +4,74 @@ import { storage } from "@/server/storage";
 import { headers } from "next/headers";
 
 function getStripeClient() {
-  if (!process.env.STRIPE_SECRET_KEY) {
-    throw new Error("STRIPE_SECRET_KEY is missing");
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) {
+    throw new Error("STRIPE_SECRET_KEY environment variable is required");
   }
-  return new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2025-01-27.acacia" as any,
-  });
+  return new Stripe(secretKey);
 }
 
 export async function POST(req: Request) {
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error("STRIPE_WEBHOOK_SECRET is not configured");
+    return NextResponse.json({ message: "Server Webhook Configuration Error" }, { status: 500 });
+  }
+
   const body = await req.text();
-  const signature = (await headers()).get("Stripe-Signature") as string;
+  const reqHeaders = await headers();
+  const signature = reqHeaders.get("stripe-signature");
+
+  if (!signature) {
+    return NextResponse.json({ message: "Missing Stripe-Signature header" }, { status: 400 });
+  }
 
   let event: Stripe.Event;
 
   try {
     const stripe = getStripeClient();
-    event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
-  } catch (err: any) {
-    console.error(`Webhook Error: ${err.message}`);
-    return NextResponse.json({ message: `Webhook Error: ${err.message}` }, { status: 400 });
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "Unknown verification error";
+    console.error(`Stripe Webhook Signature Verification Error: ${errorMessage}`);
+    return NextResponse.json({ message: `Webhook Error: ${errorMessage}` }, { status: 400 });
   }
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const walletAddress = session.metadata?.walletAddress;
-    const creditsAmount = parseInt(session.metadata?.credits || "0");
 
-    if (walletAddress && creditsAmount > 0) {
+    // Verify payment status before fulfilling credits
+    if (session.payment_status !== "paid") {
+      console.warn(`[Stripe Webhook] Session ${session.id} not paid yet (status: ${session.payment_status})`);
+      return NextResponse.json({ received: true, status: "unpaid_ignored" });
+    }
+
+    const walletAddress = session.metadata?.walletAddress;
+    const creditsAmount = parseInt(session.metadata?.credits || "0", 10);
+
+    if (walletAddress && /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(walletAddress) && creditsAmount > 0) {
       try {
         let user = await storage.getUserByWalletAddress(walletAddress);
-        
+
         if (!user) {
-          // If user doesn't exist, create a placeholder one
           user = await storage.createUser({
             username: `wallet_${walletAddress.slice(0, 8)}`,
             walletAddress,
-            password: null as any, // Nullable password
+            password: null,
           });
         }
 
+        const customerId = typeof session.customer === "string" ? session.customer : user.stripeCustomerId;
+
         await storage.updateUser(user.id, {
           credits: (user.credits || 0) + creditsAmount,
-          stripeCustomerId: session.customer as string || user.stripeCustomerId,
+          stripeCustomerId: customerId,
         });
 
-        console.log(`Successfully added ${creditsAmount} credits to ${walletAddress}`);
-      } catch (err) {
-        console.error("Failed to update user credits in webhook:", err);
-        return NextResponse.json({ message: "Failed to update credits" }, { status: 500 });
+        console.log(`[Stripe Webhook] Verified payment and added ${creditsAmount} credits to wallet ${walletAddress}`);
+      } catch (err: unknown) {
+        console.error("[Stripe Webhook] DB error updating user credits:", err);
+        return NextResponse.json({ message: "Transaction State Sync Failed" }, { status: 500 });
       }
     }
   }

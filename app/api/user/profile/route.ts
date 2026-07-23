@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       const signatureBytes = bs58.decode(signature);
       const publicKeyBytes = new PublicKey(walletAddress).toBytes();
       const isValid = nacl.sign.detached.verify(messageBytes, signatureBytes, publicKeyBytes);
-      
+
       if (!isValid) {
         return NextResponse.json({ message: "Invalid signature" }, { status: 401 });
       }
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
         user = await storage.createUser({
           username: `wallet_${walletAddress.slice(0, 8)}`,
           walletAddress,
-          password: null as any,
+          password: null,
         });
       }
     } else if (!user) {
@@ -39,7 +39,8 @@ export async function POST(req: Request) {
     // Sanitize response
     const { id, password, stripeCustomerId, ...safeUser } = user;
     return NextResponse.json(safeUser);
-  } catch (err: any) {
-    return NextResponse.json({ message: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "Internal Server Error";
+    return NextResponse.json({ message: errorMessage }, { status: 500 });
   }
 }

@@ -40,14 +40,14 @@ export function CustomWalletButton() {
 
   if (!wallet || !publicKey) {
     return (
-      <div className="relative group">
-        <div className="absolute -inset-0.5 bg-primary/30 blur-md opacity-50 group-hover:opacity-100 transition rounded-lg"></div>
+      <div className="relative group max-w-xs">
         <Button 
+          variant="obsidian"
           onClick={() => setVisible(true)}
-          className="relative bg-black border border-primary/50 text-white hover:bg-primary/20 hover:text-white font-heading font-bold rounded-lg transition-all"
+          className="w-full h-10 px-4 flex items-center justify-center gap-2"
         >
-          <Wallet className="w-4 h-4 mr-2 text-primary" />
-          CONNECT WALLET
+          <Wallet className="w-4 h-4 text-purple-400" />
+          <span>CONNECT WALLET</span>
         </Button>
       </div>
     );
@@ -60,12 +60,12 @@ export function CustomWalletButton() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button 
-          variant="outline" 
-          className="relative bg-black border-primary/50 text-primary hover:bg-primary/20 hover:text-white font-heading font-medium tracking-wide"
+          variant="obsidian" 
+          className="h-10 px-4 flex items-center justify-center gap-2"
         >
-          <Image src={wallet.adapter.icon} alt={name} width={16} height={16} className="w-4 h-4 mr-2 rounded-full" unoptimized />
-          {base58.slice(0, 4)}..{base58.slice(-4)}
-          <ChevronDown className="w-4 h-4 ml-2 opacity-50" />
+          <Image src={wallet.adapter.icon} alt={name} width={16} height={16} className="w-4 h-4 rounded-full" unoptimized />
+          <span>{base58.slice(0, 4)}..{base58.slice(-4)}</span>
+          <ChevronDown className="w-4 h-4 opacity-70 text-purple-400" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="bg-black/90 border-primary/20 backdrop-blur-md">

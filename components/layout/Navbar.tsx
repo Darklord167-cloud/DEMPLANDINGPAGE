@@ -1,6 +1,6 @@
 "use client";
 
-import { Shield, Menu, X, Globe, Send } from "lucide-react";
+import { Shield, Menu, X, Globe, Send, ChevronDown, Sparkles, ExternalLink, Terminal, Cpu, FileText, Map, HelpCircle, Mail, Award, Settings as SettingsIcon, Layers } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "motion/react";
@@ -9,6 +9,16 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 import { CustomWalletButton } from "@/components/ui/custom-wallet-button";
+import { useVipTier } from "@/lib/vip-context";
+import { VipBadge } from "@/components/vip/VipBadge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function XIcon(props: React.ComponentProps<"svg">) {
   return (
@@ -29,126 +39,272 @@ function DiscordIcon(props: React.ComponentProps<"svg">) {
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const { tier } = useVipTier();
 
-  const navLinks = [
-    { name: "Home", href: "/" },
-    { name: "Features", href: "/features" },
-    { name: "$DEMP", href: "/token" },
-    { name: "Holdings", href: "/holdings" },
-    { name: "Whitepaper", href: "/whitepaper" },
-    { name: "Roadmap", href: "/roadmap" },
-    { name: "Oracle", href: "/oracle" },
-    { name: "Credits", href: "/credits" },
-    { name: "FAQ", href: "/faq" },
-    { name: "Contact", href: "/contact" },
-    { name: "Settings", href: "/settings" },
-    { name: "Command Center", href: "/command-center" },
+  // Primary links visible on header
+  const primaryLinks = [
+    { name: "ORACLE", href: "/oracle", icon: Cpu },
+    { name: "COMMAND CENTER", href: "/command-center", icon: Terminal },
+    { name: "VIP HQ", href: "/vip", icon: Award },
+    { name: "$DEMP", href: "/token", icon: Sparkles },
+  ];
+
+  // Secondary links collapsed into "MORE" dropdown
+  const secondaryCategories = [
+    {
+      title: "Protocol & Architecture",
+      items: [
+        { name: "Features Overview", href: "/features", icon: Layers },
+        { name: "Empire Holdings", href: "/holdings", icon: Shield },
+        { name: "System Settings", href: "/settings", icon: SettingsIcon },
+      ],
+    },
+    {
+      title: "Documentation & Alpha",
+      items: [
+        { name: "Whitepaper", href: "/whitepaper", icon: FileText },
+        { name: "Protocol Roadmap", href: "/roadmap", icon: Map },
+      ],
+    },
+    {
+      title: "Community & Support",
+      items: [
+        { name: "FAQ", href: "/faq", icon: HelpCircle },
+        { name: "Credits", href: "/credits", icon: Sparkles },
+        { name: "Contact HQ", href: "/contact", icon: Mail },
+      ],
+    },
   ];
 
   const socialLinks = [
-    { name: "Official Website", href: "https://darkempirelords.com", icon: Globe, color: "text-primary" },
+    { name: "Official Website", href: "https://darkempirelords.com", icon: Globe, color: "text-purple-400" },
     { name: "Follow on X", href: "https://x.com/darkhacker167", icon: XIcon, color: "text-white" },
     { name: "Join Telegram", href: "https://t.me/DarkEmpireHQ", icon: Send, color: "text-[#0088cc]" },
     { name: "Join Discord", href: "https://discord.gg/VzhBv7YmM", icon: DiscordIcon, color: "text-[#5865F2]" },
   ];
 
   return (
-    <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-background/80 backdrop-blur-md shadow-[0_4px_30px_rgba(168,85,247,0.05)]">
-      <div className="container mx-auto px-6 h-20 flex items-center justify-between">
+    <nav className="fixed top-0 w-full z-50 border-b border-purple-900/30 bg-[#09090d]/90 backdrop-blur-xl shadow-[0_4px_30px_rgba(168,85,247,0.12)]">
+      <div className="container mx-auto px-4 lg:px-8 h-20 flex items-center justify-between">
+        
+        {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-3 group">
           <Image 
             src="/assets/demp-logo.svg" 
             alt="Dark Empire Logo" 
             width={48}
             height={48}
-            className="h-10 w-10 md:h-12 md:w-12 transition-transform duration-300 group-hover:scale-110"
+            className="h-10 w-10 md:h-11 md:w-11 transition-transform duration-300 group-hover:scale-110 drop-shadow-[0_0_12px_rgba(168,85,247,0.5)]"
           />
-          <span className="font-display text-2xl font-bold tracking-widest text-white">
+          <span className="font-display text-xl md:text-2xl font-black tracking-widest text-white group-hover:text-purple-300 transition-colors text-glow">
             DARK EMPIRE
           </span>
         </Link>
 
-        {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => {
+        {/* Desktop Primary Nav */}
+        <div className="hidden lg:flex items-center gap-6">
+          {primaryLinks.map((link) => {
             const isActive = pathname === link.href;
+            const Icon = link.icon;
             return (
               <Link
                 key={link.name}
                 href={link.href}
-                className={`text-sm font-heading font-semibold tracking-wider transition-colors uppercase ${
-                  isActive ? "text-primary text-glow" : "text-muted-foreground hover:text-primary hover:text-glow"
+                className={`flex items-center gap-1.5 text-xs font-mono font-bold tracking-wider transition-all duration-200 uppercase px-3 py-1.5 rounded-lg ${
+                  isActive 
+                    ? "text-purple-300 bg-purple-950/60 border border-purple-500/40 text-glow" 
+                    : "text-zinc-400 hover:text-white hover:bg-zinc-900/80"
                 }`}
               >
+                <Icon className="w-3.5 h-3.5 text-purple-400" />
                 {link.name}
               </Link>
-            )
+            );
           })}
-          {/* Custom Solana Wallet Adapter UI */}
+
+          {/* Collapsed Secondary Links Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-1 text-xs font-mono font-bold tracking-wider text-zinc-400 hover:text-white uppercase px-3 py-1.5 rounded-lg hover:bg-zinc-900/80 transition-colors outline-none cursor-pointer">
+                <span>MORE</span>
+                <ChevronDown className="w-3.5 h-3.5 text-purple-400" />
+              </button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent className="w-64 bg-[#0c0c14]/95 border border-purple-900/40 backdrop-blur-2xl p-2 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.9),0_0_20px_rgba(168,85,247,0.2)] text-white">
+              {secondaryCategories.map((cat, idx) => (
+                <div key={cat.title}>
+                  {idx > 0 && <DropdownMenuSeparator className="bg-zinc-800/80 my-1" />}
+                  <DropdownMenuLabel className="text-[10px] font-mono text-purple-400 uppercase tracking-widest px-2 py-1.5">
+                    {cat.title}
+                  </DropdownMenuLabel>
+                  {cat.items.map((item) => {
+                    const ItemIcon = item.icon;
+                    const isActive = pathname === item.href;
+                    return (
+                      <DropdownMenuItem key={item.name} asChild>
+                        <Link
+                          href={item.href}
+                          className={`flex items-center gap-2.5 px-2.5 py-2 text-xs font-mono rounded-xl transition-colors cursor-pointer ${
+                            isActive ? "bg-purple-950/80 text-purple-200 font-bold" : "text-zinc-300 hover:text-white hover:bg-purple-950/40"
+                          }`}
+                        >
+                          <ItemIcon className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                          <span>{item.name}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </div>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* VIP Badge Link */}
+          <Link href="/vip" className="hover:opacity-90 transition-opacity">
+            <VipBadge tier={tier} size="sm" showIcon />
+          </Link>
+        </div>
+
+        {/* Action Buttons: Wallet & Trading Engine */}
+        <div className="hidden md:flex items-center gap-3">
           <CustomWalletButton />
 
-          <Button variant="outline" asChild className="border-primary/50 text-primary hover:bg-primary/20 hover:text-white font-heading font-bold shadow-[0_0_15px_rgba(168,85,247,0.2)]">
-            <a href="https://ais-dev-aao5behypscgwvze3hwwqj-40280094919.us-west1.run.app" target="_blank" rel="noreferrer">
-              TRADING ENGINE
+          <Button
+            variant="obsidian"
+            asChild
+            className="h-10 px-4 flex items-center justify-center gap-2 max-w-xs"
+          >
+            <a
+              href="https://darkempireoperations-terminal.vercel.app"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2"
+            >
+              <span>TRADING ENGINE</span>
+              <ExternalLink className="w-3.5 h-3.5 text-amber-400" />
             </a>
           </Button>
         </div>
 
-        {/* Mobile Toggle */}
+        {/* Mobile Hamburger Toggle */}
         <button
-          className="md:hidden text-white p-2"
+          className="lg:hidden text-zinc-300 hover:text-white p-2 rounded-xl border border-zinc-800 bg-zinc-950/80"
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Toggle menu"
         >
-          {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          {isOpen ? <X className="h-6 w-6 text-purple-400" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
 
-      {/* Mobile Nav */}
+      {/* Mobile Drawer Menu */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-black/95 border-b border-white/10 overflow-hidden"
+            transition={{ duration: 0.3 }}
+            className="lg:hidden bg-[#09090d]/98 border-b border-purple-900/40 backdrop-blur-2xl overflow-hidden shadow-2xl"
           >
-            <div className="flex flex-col p-6 gap-1">
-              {navLinks.map((link) => {
-                const isActive = pathname === link.href;
-                return (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    className={`text-lg font-heading font-semibold py-3 border-b border-white/5 ${
-                      isActive ? "text-primary" : "text-white/80 hover:text-primary"
-                    }`}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    {link.name}
-                  </Link>
-                )
-              })}
-
-              <div className="pt-4 pb-2 border-b border-white/10">
+            <div className="flex flex-col p-6 gap-6 max-h-[85vh] overflow-y-auto">
+              {/* Wallet & Trading Engine CTA */}
+              <div className="space-y-3 pb-4 border-b border-zinc-800/80">
                 <CustomWalletButton />
-              </div>
-
-              <div className="pt-4 mt-2 space-y-3">
-                <p className="text-xs font-mono text-white/30 tracking-widest uppercase">Community</p>
-                {socialLinks.map((link) => (
+                <Button
+                  variant="obsidian"
+                  asChild
+                  className="w-full max-w-xs mx-auto h-11 flex items-center justify-center gap-2"
+                >
                   <a
-                    key={link.name}
-                    href={link.href}
+                    href="https://darkempireoperations-terminal.vercel.app"
                     target="_blank"
                     rel="noreferrer"
-                    className={`flex items-center gap-3 py-2 ${link.color} hover:opacity-80 transition-opacity`}
-                    onClick={() => setIsOpen(false)}
                   >
-                    <link.icon className="h-5 w-5 shrink-0" />
-                    <span className="font-heading font-semibold">{link.name}</span>
+                    <span>TRADING ENGINE</span>
+                    <ExternalLink className="w-4 h-4 text-amber-400" />
                   </a>
+                </Button>
+              </div>
+
+              {/* Primary Navigation Links */}
+              <div className="space-y-2">
+                <p className="text-[10px] font-mono text-purple-400 uppercase tracking-widest">
+                  Primary Command Modules
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {primaryLinks.map((link) => {
+                    const isActive = pathname === link.href;
+                    const Icon = link.icon;
+                    return (
+                      <Link
+                        key={link.name}
+                        href={link.href}
+                        onClick={() => setIsOpen(false)}
+                        className={`flex items-center gap-2 p-3 rounded-xl border text-xs font-mono font-bold tracking-wider uppercase transition-all ${
+                          isActive
+                            ? "bg-purple-950/80 border-purple-500/50 text-purple-200 text-glow"
+                            : "bg-zinc-950/60 border-zinc-800 text-zinc-300 hover:text-white"
+                        }`}
+                      >
+                        <Icon className="w-4 h-4 text-purple-400 shrink-0" />
+                        <span>{link.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Secondary Navigation Categories */}
+              <div className="space-y-4">
+                {secondaryCategories.map((cat) => (
+                  <div key={cat.title} className="space-y-1.5">
+                    <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
+                      {cat.title}
+                    </p>
+                    <div className="space-y-1">
+                      {cat.items.map((item) => {
+                        const ItemIcon = item.icon;
+                        const isActive = pathname === item.href;
+                        return (
+                          <Link
+                            key={item.name}
+                            href={item.href}
+                            onClick={() => setIsOpen(false)}
+                            className={`flex items-center gap-2.5 py-2 px-3 text-xs font-mono rounded-lg transition-colors ${
+                              isActive ? "text-purple-300 font-bold bg-purple-950/40" : "text-zinc-400 hover:text-white"
+                            }`}
+                          >
+                            <ItemIcon className="w-3.5 h-3.5 text-purple-400/80 shrink-0" />
+                            <span>{item.name}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
                 ))}
+              </div>
+
+              {/* Social Links */}
+              <div className="pt-4 border-t border-zinc-800/80 space-y-2">
+                <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
+                  HQ Channels
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {socialLinks.map((link) => (
+                    <a
+                      key={link.name}
+                      href={link.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-2 p-2 rounded-lg bg-zinc-950/80 border border-zinc-800/60 text-xs font-mono text-zinc-300 hover:text-white transition-colors"
+                    >
+                      <link.icon className={`h-4 w-4 shrink-0 ${link.color}`} />
+                      <span className="truncate">{link.name}</span>
+                    </a>
+                  ))}
+                </div>
               </div>
             </div>
           </motion.div>

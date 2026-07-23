@@ -11,6 +11,19 @@ export const users = pgTable("users", {
   credits: integer("credits").default(0).notNull(),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
+  vipTier: text("vip_tier").default("none").notNull(),
+  dempBalance: text("demp_balance").default("0").notNull(),
+  lastVipVerifiedAt: timestamp("last_vip_verified_at"),
+  vipVerified: boolean("vip_verified").default(false).notNull(),
+});
+
+export const vipVerifications = pgTable("vip_verifications", {
+  id: serial("id").primaryKey(),
+  walletAddress: text("wallet_address").notNull(),
+  dempBalance: text("demp_balance").notNull(),
+  tier: text("tier").notNull(),
+  signatureVerified: boolean("signature_verified").default(false).notNull(),
+  verifiedAt: timestamp("verified_at").defaultNow().notNull(),
 });
 
 export const subscribers = pgTable("subscribers", {
@@ -32,9 +45,18 @@ export const contactMessages = pgTable("contact_messages", {
 
 export const insertUserSchema = z.object({
   username: z.string().min(3).max(50),
-  password: z.string().optional(),
-  walletAddress: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/, "Invalid Solana address").optional(),
+  password: z.string().nullable().optional(),
+  walletAddress: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/, "Invalid Solana address").nullable().optional(),
   credits: z.number().int().optional(),
+  vipTier: z.string().optional(),
+  dempBalance: z.string().optional(),
+});
+
+export const insertVipVerificationSchema = z.object({
+  walletAddress: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/, "Invalid Solana address"),
+  dempBalance: z.string(),
+  tier: z.string(),
+  signatureVerified: z.boolean().optional(),
 });
 
 export const insertSubscriberSchema = z.object({
@@ -48,9 +70,11 @@ export const insertContactMessageSchema = z.object({
   message: z.string().min(1, "Message is required").max(5000),
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
-export type InsertSubscriber = z.infer<typeof insertSubscriberSchema>;
+export type VipVerification = typeof vipVerifications.$inferSelect;
+export type InsertVipVerification = typeof vipVerifications.$inferInsert;
+export type InsertSubscriber = typeof subscribers.$inferInsert;
 export type Subscriber = typeof subscribers.$inferSelect;
-export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;
+export type InsertContactMessage = typeof contactMessages.$inferInsert;
 export type ContactMessage = typeof contactMessages.$inferSelect;

@@ -44,22 +44,26 @@ export async function POST(req: Request) {
     
     try {
       if (adminAuth) {
-         decodedToken = await adminAuth.verifyIdToken(token);
+        decodedToken = await adminAuth.verifyIdToken(token);
       } else {
-         console.warn("Firebase Admin not configured, bypassing token verification for demo.");
-         const fakeUid = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString()).user_id;
-         decodedToken = { uid: fakeUid || 'demo-user' };
+        if (process.env.NODE_ENV === "production") {
+          return NextResponse.json(
+            { error: "Authentication service unavailable" },
+            { status: 503 }
+          );
+        }
+        console.warn("Development mode: fallback token decoding used");
+        const parts = token.split('.');
+        if (parts.length < 2) {
+          return NextResponse.json({ error: 'Malformed token' }, { status: 401 });
+        }
+        const payloadStr = Buffer.from(parts[1], 'base64').toString();
+        const decoded = JSON.parse(payloadStr);
+        decodedToken = { uid: decoded.user_id || decoded.sub || 'dev-user' };
       }
     } catch (error) {
-      console.warn("Token verification bypass for simulation:", error);
-      // Fallback for simulation if Admin isn't configured properly in this app
-      const payload = token.split('.')[1];
-      if (payload) {
-         const decoded = JSON.parse(Buffer.from(payload, 'base64').toString());
-         decodedToken = { uid: decoded.user_id || 'demo-user' };
-      } else {
-         return NextResponse.json({ error: 'Invalid token signature' }, { status: 401 });
-      }
+      console.error("Token verification failed:", error);
+      return NextResponse.json({ error: 'Invalid authentication token' }, { status: 401 });
     }
 
     const uid = decodedToken.uid;

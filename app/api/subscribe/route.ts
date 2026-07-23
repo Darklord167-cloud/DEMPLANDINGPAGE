@@ -6,7 +6,7 @@ import { insertSubscriberSchema } from "@/shared/schema";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const data = insertSubscriberSchema.parse(body) as any;
+    const data = insertSubscriberSchema.parse(body);
 
     const existing = await storage.getSubscriberByEmail(data.email);
     if (existing) {
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { message: error.issues[0].message },
+        { message: error.issues[0]?.message || "Validation error" },
         { status: 400 }
       );
     }

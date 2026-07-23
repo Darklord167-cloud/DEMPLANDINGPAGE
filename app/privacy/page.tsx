@@ -16,7 +16,7 @@ export default function PrivacyPolicy() {
 
           <h2 className="text-2xl font-bold mt-8 mb-4">1. Introduction</h2>
           <p>
-            Dark Empire Lords LLC ("we", "our", or "us") respects your privacy and is committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you visit our website or use our services, including our custom software design platform, cryptocurrency swaps, and integration with Web3 wallets and Google accounts.
+            Dark Empire Lords LLC (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) respects your privacy and is committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you visit our website or use our services, including our custom software design platform, cryptocurrency swaps, and integration with Web3 wallets and Google accounts.
           </p>
 
           <h2 className="text-2xl font-bold mt-8 mb-4">2. Data We Collect</h2>
