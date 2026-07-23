@@ -80,7 +80,7 @@ export function Navbar() {
     { name: "Official Website", href: "https://darkempirelords.com", icon: Globe, color: "text-purple-400" },
     { name: "Follow on X", href: "https://x.com/darkhacker167", icon: XIcon, color: "text-white" },
     { name: "Join Telegram", href: "https://t.me/DarkEmpireHQ", icon: Send, color: "text-[#0088cc]" },
-    { name: "Join Discord", href: "https://discord.gg/VzhBv7YmM", icon: DiscordIcon, color: "text-[#5865F2]" },
+    { name: "Join Discord", href: "https://discord.gg/XAfaWZSn", icon: DiscordIcon, color: "text-[#5865F2]" },
   ];
 
   return (
@@ -296,7 +296,7 @@ export function Navbar() {
                       key={link.name}
                       href={link.href}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       onClick={() => setIsOpen(false)}
                       className="flex items-center gap-2 p-2 rounded-lg bg-zinc-950/80 border border-zinc-800/60 text-xs font-mono text-zinc-300 hover:text-white transition-colors"
                     >

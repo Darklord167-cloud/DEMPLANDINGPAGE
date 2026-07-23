@@ -66,7 +66,7 @@ export function Footer() {
             </p>
             <div className="flex flex-wrap gap-4">
               <Button asChild className="bg-primary hover:bg-primary/80 text-white font-bold tracking-wider shadow-[0_0_20px_-5px_var(--color-primary)] border border-primary/50">
-                <a href="https://darkempirelords.com" target="_blank" rel="noreferrer">
+                <a href="https://darkempirelords.com" target="_blank" rel="noopener noreferrer">
                   <Globe className="mr-2 h-4 w-4" /> OFFICIAL WEBSITE
                 </a>
               </Button>
@@ -81,21 +81,21 @@ export function Footer() {
           <div>
             <h4 className="font-heading font-bold text-white mb-6 uppercase tracking-wider text-glow">Join The Ranks</h4>
             <div className="space-y-4">
-              <a href="https://x.com/darkhacker167" target="_blank" rel="noreferrer" className="flex items-center gap-3 text-muted-foreground hover:text-white transition-colors group" data-testid="link-twitter">
+              <a href="https://x.com/darkhacker167" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-muted-foreground hover:text-white transition-colors group" data-testid="link-twitter">
                 <div className="h-10 w-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-primary/50 group-hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all">
                   <XIcon className="h-4 w-4" />
                 </div>
                 <span className="font-heading font-semibold text-lg">Follow on X</span>
                 <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
               </a>
-              <a href="https://t.me/DarkEmpireHQ" target="_blank" rel="noreferrer" className="flex items-center gap-3 text-muted-foreground hover:text-white transition-colors group" data-testid="link-telegram">
+              <a href="https://t.me/DarkEmpireHQ" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-muted-foreground hover:text-white transition-colors group" data-testid="link-telegram">
                 <div className="h-10 w-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-[#0088cc]/50 group-hover:shadow-[0_0_15px_rgba(0,136,204,0.3)] transition-all">
                   <Send className="h-4 w-4" />
                 </div>
                 <span className="font-heading font-semibold text-lg">Join Telegram</span>
                 <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-[#0088cc]" />
               </a>
-              <a href="https://discord.gg/VzhBv7YmM" target="_blank" rel="noreferrer" className="flex items-center gap-3 text-muted-foreground hover:text-white transition-colors group" data-testid="link-discord">
+              <a href="https://discord.gg/XAfaWZSn" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-muted-foreground hover:text-white transition-colors group" data-testid="link-discord">
                 <div className="h-10 w-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-[#5865F2]/50 group-hover:shadow-[0_0_15px_rgba(88,101,242,0.3)] transition-all">
                   <DiscordIcon className="h-4 w-4" />
                 </div>
