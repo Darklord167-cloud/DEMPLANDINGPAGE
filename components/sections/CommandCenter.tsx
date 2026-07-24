@@ -155,13 +155,26 @@ export function CommandCenter() {
             Biometric credentials required. Authenticate to route a secure tunnel node into the Trading Engine.
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-8 pt-2 flex justify-center">
+        <CardContent className="p-8 pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Button 
             onClick={signInWithGoogle} 
             variant="obsidian"
-            className="w-full max-w-sm mx-auto h-12 text-xs font-mono font-bold uppercase tracking-widest rounded-xl"
+            className="w-full max-w-sm h-12 text-xs font-mono font-bold uppercase tracking-widest rounded-xl"
           >
-            CONNECT TO TRADING ENGINE
+            AUTHENTICATE WITH GOOGLE
+          </Button>
+          <Button 
+            variant="obsidian"
+            asChild
+            className="w-full max-w-sm h-12 text-xs font-mono font-bold uppercase tracking-widest rounded-xl"
+          >
+            <a 
+              href="https://dark-empire-operations-terminal.vercel.app" 
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
+              CONNECT TO TRADING ENGINE
+            </a>
           </Button>
         </CardContent>
       </Card>

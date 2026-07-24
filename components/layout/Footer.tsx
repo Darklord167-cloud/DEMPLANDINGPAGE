@@ -70,6 +70,11 @@ export function Footer() {
                   <Globe className="mr-2 h-4 w-4" /> OFFICIAL WEBSITE
                 </a>
               </Button>
+              <Button asChild variant="outline" className="border-primary/50 text-amber-400 hover:bg-amber-400/20 hover:text-amber-300 font-bold tracking-wider">
+                <a href="https://dark-empire-operations-terminal.vercel.app" target="_blank" rel="noopener noreferrer">
+                  TRADING ENGINE
+                </a>
+              </Button>
               <Button asChild variant="outline" className="border-primary/50 text-primary hover:bg-primary/20 hover:text-white font-bold tracking-wider">
                 <a href="/whitepaper">
                   WHITEPAPER

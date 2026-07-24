@@ -176,9 +176,9 @@ export function Navbar() {
             className="h-10 px-4 flex items-center justify-center gap-2 max-w-xs"
           >
             <a
-              href="https://darkempireoperations-terminal.vercel.app"
+              href="https://dark-empire-operations-terminal.vercel.app"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="flex items-center gap-2"
             >
               <span>TRADING ENGINE</span>
@@ -217,9 +217,9 @@ export function Navbar() {
                   className="w-full max-w-xs mx-auto h-11 flex items-center justify-center gap-2"
                 >
                   <a
-                    href="https://darkempireoperations-terminal.vercel.app"
+                    href="https://dark-empire-operations-terminal.vercel.app"
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                   >
                     <span>TRADING ENGINE</span>
                     <ExternalLink className="w-4 h-4 text-amber-400" />
