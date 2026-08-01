@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, TerminalSquare, Coins } from "lucide-react";
+import { Loader2, TerminalSquare, Coins, Cpu, Activity, Zap } from "lucide-react";
 import { motion } from "motion/react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { toast } from "sonner";
@@ -84,7 +84,7 @@ function TypewriterText({
     };
   }, [content, isOracle, disableAudio, onActiveStateChange]);
 
-  return <span>{displayedContent}{isTyping && <span className="opacity-75 animate-pulse text-primary">▋</span>}</span>;
+  return <span>{displayedContent}{isTyping && <span className="opacity-80 animate-pulse text-[#ff6600]">▋</span>}</span>;
 }
 
 export default function OraclePage() {
@@ -92,7 +92,7 @@ export default function OraclePage() {
   const { tier } = useVipTier();
   const [profile, setProfile] = useState<any>(null);
   const [messages, setMessages] = useState<{ role: "user" | "oracle"; content: string }[]>([
-    { role: "oracle", content: "Oracle online. Let's make some money and scale your digital empire. State your objective." },
+    { role: "oracle", content: "ULTRON MIND CORE ONLINE. Quantum neural links calibrated. State your command, Lord." },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -227,13 +227,13 @@ export default function OraclePage() {
         parts: [{ text: msg.content }]
       }));
 
-      // 4. Send message securely to our new backend route
+      // 4. Send message securely to our backend route
       const aiResponse = await fetch("/api/oracle/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: userMessage,
-          history: history.slice(0, -1) // Send all previous messages except the current one
+          history: history.slice(0, -1)
         }),
       });
 
@@ -243,10 +243,10 @@ export default function OraclePage() {
       }
 
       const { response: responseText } = await aiResponse.json();
-      setMessages((prev) => [...prev, { role: "oracle", content: responseText || "Communication empty." }]);
+      setMessages((prev) => [...prev, { role: "oracle", content: responseText || "Neural matrix returned empty response." }]);
       
     } catch (err: any) {
-      setMessages((prev) => [...prev, { role: "oracle", content: err.message || "Communication disrupted." }]);
+      setMessages((prev) => [...prev, { role: "oracle", content: err.message || "Communication link disrupted." }]);
     } finally {
       setLoading(false);
     }
@@ -255,11 +255,17 @@ export default function OraclePage() {
   const isCoreActive = loading || isOracleSpeaking;
 
   return (
-    <div className="min-h-screen py-16 bg-[#0a001a] relative overflow-hidden flex flex-col items-center justify-center">
-      {/* Background Image & Effects */}
-      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070')] bg-cover bg-center bg-no-repeat opacity-20 mix-blend-screen pointer-events-none filter blur-[4px]" style={{ filter: 'hue-rotate(-45deg)' }} />
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0a001a] via-transparent to-[#0a001a] pointer-events-none opacity-80" />
-      <div className="absolute bottom-0 left-0 right-0 h-[30vh] bg-gradient-to-t from-primary/20 to-transparent pointer-events-none mix-blend-screen" />
+    <div className="min-h-screen py-16 bg-[#020b18] relative overflow-hidden flex flex-col items-center justify-center">
+      {/* Background Image & Deep Blue Ultron Ambient Glows */}
+      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070')] bg-cover bg-center bg-no-repeat opacity-15 mix-blend-screen pointer-events-none filter blur-[3px]" style={{ filter: 'hue-rotate(-120deg)' }} />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#020b18] via-[#041126]/90 to-[#020b18] pointer-events-none" />
+      
+      {/* Age of Ultron Glowing Orange Radial Ambient Flares */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-gradient-to-r from-[#ff5500]/15 via-[#00d2ff]/10 to-[#ff6600]/15 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 right-0 h-[25vh] bg-gradient-to-t from-[#ff5500]/15 via-transparent to-transparent pointer-events-none mix-blend-screen" />
+
+      {/* Cybernetic Grid Scanline Overlay */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-20 pointer-events-none" />
 
       {/* Title Area */}
       <div className="absolute top-24 z-20 flex flex-col items-center">
@@ -268,10 +274,10 @@ export default function OraclePage() {
             <Link href="/credits">
               <motion.div 
                 whileHover={{ scale: 1.05 }}
-                className="flex items-center gap-2 bg-primary/10 border border-primary/20 px-4 py-2 rounded-full cursor-pointer hover:bg-primary/20 transition-all"
+                className="flex items-center gap-2 bg-[#041635]/90 border border-[#ff6600]/40 px-4 py-2 rounded-full cursor-pointer hover:bg-[#ff6600]/20 transition-all shadow-[0_0_15px_rgba(255,102,0,0.3)]"
               >
-                <Coins className="w-4 h-4 text-primary" />
-                <span className="text-xs font-bold font-orbitron">{profile.credits} CREDITS</span>
+                <Coins className="w-4 h-4 text-[#ff8800]" />
+                <span className="text-xs font-bold font-mono text-white">{profile.credits} CREDITS</span>
               </motion.div>
             </Link>
           )}
@@ -279,22 +285,32 @@ export default function OraclePage() {
             <VipBadge tier={tier} size="sm" showIcon />
           </Link>
         </div>
-        <div className="mb-4 border-2 border-primary rounded-xl p-2.5 shadow-[0_0_20px_rgba(168,85,247,0.4)] backdrop-blur-sm bg-black/50">
-           <TerminalSquare className="h-10 w-10 text-primary drop-shadow-[0_0_10px_rgba(168,85,247,1)]" />
+
+        {/* High-Tech HUD Icon Badge */}
+        <div className="mb-3 border-2 border-[#ff6600] rounded-xl p-2.5 shadow-[0_0_25px_rgba(255,102,0,0.6)] backdrop-blur-md bg-[#04122b]/80 relative group">
+          <TerminalSquare className="h-9 w-9 text-[#00d2ff] drop-shadow-[0_0_12px_rgba(0,210,255,1)]" />
+          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#ff5500] animate-ping" />
         </div>
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-white uppercase tracking-[0.15em] sm:tracking-[0.2em] md:tracking-[0.3em] drop-shadow-[0_0_20px_rgba(168,85,247,1)]">
-          The Oracle
+
+        {/* Glitch Title */}
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-black text-white uppercase tracking-[0.15em] sm:tracking-[0.2em] md:tracking-[0.3em] drop-shadow-[0_0_25px_rgba(255,102,0,0.8)] ultron-text-glitch">
+          THE ORACLE
         </h1>
+        <p className="text-[10px] md:text-xs font-mono text-[#00d2ff] uppercase tracking-[0.3em] mt-1 flex items-center gap-2">
+          <Activity className="w-3.5 h-3.5 text-[#ff6600] animate-pulse" />
+          <span>ULTRON AI MIND CORE // QUANTUM SYNC</span>
+        </p>
       </div>
 
-      {/* The Core / Sphere */}
+      {/* The Core Hologram / Sphere */}
       <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none mt-10">
         <OracleSphere isActive={isCoreActive} />
       </div>
 
-      {/* Chat Interface */}
+      {/* Chat Interface Container */}
       <div className="container px-4 max-w-3xl mx-auto relative z-30 flex flex-col w-full h-[600px] mt-24">
         
+        {/* Messages Stream */}
         <div className="flex-1 overflow-y-auto mb-6 p-4 flex flex-col custom-scrollbar relative z-30">
           {messages.map((msg, idx) => (
             <motion.div
@@ -306,18 +322,23 @@ export default function OraclePage() {
               <div
                 className={`w-full max-w-[90%] p-6 rounded-2xl font-mono whitespace-pre-wrap text-[15px] md:text-[16px] leading-relaxed relative overflow-hidden ${
                   msg.role === "user"
-                    ? "bg-primary/10 border border-primary/40 text-primary-foreground shadow-[0_0_15px_rgba(168,85,247,0.15)] backdrop-blur-xl"
-                    : "bg-[#0f051e]/90 border border-primary/30 text-primary shadow-[0_0_20px_rgba(168,85,247,0.2)] backdrop-blur-2xl"
+                    ? "bg-[#051a3d]/90 border border-[#00d2ff]/50 text-white shadow-[0_0_20px_rgba(0,210,255,0.25)] backdrop-blur-xl"
+                    : "bg-[#04122b]/95 border border-[#ff6600]/50 text-orange-100 shadow-[0_0_25px_rgba(255,102,0,0.3)] backdrop-blur-2xl"
                 }`}
               >
-                {/* HUD scanline effect */}
-                <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.1)_50%)] bg-[length:100%_4px] pointer-events-none opacity-20" />
+                {/* Age of Ultron Scanning Line */}
+                <div className="ultron-laser-scan" />
+                <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.15)_50%)] bg-[length:100%_4px] pointer-events-none opacity-30" />
                 
-                <div className="flex items-center gap-2 mb-3 relative z-10 border-b border-primary/20 pb-2">
-                  <span className="text-[10px] text-primary/60 font-mono uppercase tracking-[0.3em]">
-                    {msg.role === "user" ? "USER // DIRECTIVE" : "SYSTEM // ORACLE"}
+                {/* Header Tag inside bubble */}
+                <div className="flex items-center justify-between mb-3 relative z-10 border-b border-[#ff6600]/30 pb-2">
+                  <span className="text-[10px] text-[#00d2ff] font-mono uppercase tracking-[0.3em] font-bold flex items-center gap-1.5">
+                    <Cpu className="w-3.5 h-3.5 text-[#ff6600]" />
+                    {msg.role === "user" ? "USER // IMPERIAL DIRECTIVE" : "ULTRON // MIND ORACLE RESPONSE"}
                   </span>
+                  <span className="text-[9px] font-mono text-[#ff8800] tracking-widest">[ONLINE]</span>
                 </div>
+
                 <div className="relative z-10">
                   {msg.role === "oracle" && idx === messages.length - 1 ? (
                     <TypewriterText 
@@ -333,12 +354,13 @@ export default function OraclePage() {
               </div>
             </motion.div>
           ))}
+
           {loading && (
             <div className="flex flex-col items-center mt-auto pt-4">
-              <div className="p-6 rounded-3xl w-full max-w-[90%] bg-[#0f051e]/80 border border-white/20 text-white/90 shadow-[0_0_25px_rgba(168,85,247,0.2)] backdrop-blur-2xl flex items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                <span className="ml-3 text-xs text-primary font-mono uppercase tracking-[0.2em] animate-pulse">
-                  Processing...
+              <div className="p-6 rounded-3xl w-full max-w-[90%] bg-[#04122b]/95 border border-[#ff6600]/60 text-white shadow-[0_0_30px_rgba(255,102,0,0.4)] backdrop-blur-2xl flex items-center justify-center gap-3">
+                <Loader2 className="h-6 w-6 animate-spin text-[#ff6600]" />
+                <span className="text-xs text-[#00d2ff] font-mono uppercase tracking-[0.25em] animate-pulse font-bold">
+                  CALCULATING NEURAL MATRIX...
                 </span>
               </div>
             </div>
@@ -346,25 +368,32 @@ export default function OraclePage() {
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={sendMessage} className="flex gap-4 relative z-30 mb-8 max-w-[90%] mx-auto w-full">
+        {/* Directive Transmit Input Form */}
+        <form onSubmit={sendMessage} className="flex gap-4 relative z-30 mb-8 max-w-[95%] sm:max-w-[90%] mx-auto w-full">
+          <div className="relative flex-1">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="AWAITING DIRECTIVE..."
-              className="flex-1 bg-[#0a001a]/60 backdrop-blur-xl border border-primary/30 text-primary focus:border-primary/80 h-14 text-base placeholder:text-primary/40 font-mono rounded-xl px-6 outline-none ring-0 shadow-[inset_0_0_15px_rgba(168,85,247,0.2)] transition-colors uppercase"
+              placeholder="TRANSMIT DIRECTIVE TO ULTRON CORE..."
+              className="w-full bg-[#030d21]/90 backdrop-blur-2xl border border-[#ff6600]/50 focus:border-[#ff6600] text-white h-14 text-sm md:text-base placeholder:text-zinc-500 font-mono rounded-xl px-6 outline-none ring-0 shadow-[inset_0_0_20px_rgba(255,102,0,0.2),0_0_15px_rgba(0,0,0,0.8)] transition-all uppercase"
               disabled={loading || isOracleSpeaking}
               spellCheck={false}
               autoFocus
             />
+          </div>
+
           <Button
             type="submit"
-            className="h-14 px-8 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#b026ff] via-primary to-[#5b148c] hover:from-[#c45eff] hover:via-[#a020f0] hover:to-[#4a0e7a] border border-primary/50 text-white font-bold uppercase tracking-[0.2em] rounded-xl shadow-[0_0_20px_rgba(168,85,247,0.6),inset_0_0_15px_rgba(255,255,255,0.3)] transition-all active:scale-95 flex-shrink-0"
+            className="h-14 px-8 bg-gradient-to-r from-[#ff5500] via-[#ff7700] to-[#ffaa00] hover:from-[#ff6600] hover:to-[#ffcc00] border border-white/40 text-white font-bold uppercase tracking-[0.2em] rounded-xl shadow-[0_0_25px_rgba(255,102,0,0.7),inset_0_0_15px_rgba(255,255,255,0.4)] transition-all active:scale-95 shrink-0 flex items-center gap-2"
             disabled={loading || isOracleSpeaking}
           >
-            Transmit
+            <Zap className="w-4 h-4 text-white animate-pulse" />
+            <span>TRANSMIT</span>
           </Button>
         </form>
+
       </div>
     </div>
   );
 }
+

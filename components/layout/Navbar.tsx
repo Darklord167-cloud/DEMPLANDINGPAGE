@@ -1,6 +1,6 @@
 "use client";
 
-import { Shield, Menu, X, Globe, Send, ChevronDown, Sparkles, ExternalLink, Terminal, Cpu, FileText, Map, HelpCircle, Mail, Award, Settings as SettingsIcon, Layers } from "lucide-react";
+import { Shield, Menu, X, Globe, Send, ChevronDown, Sparkles, ExternalLink, Terminal, Cpu, FileText, Map, HelpCircle, Mail, Award, Settings as SettingsIcon, Layers, Copy, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "motion/react";
@@ -19,6 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 
 function XIcon(props: React.ComponentProps<"svg">) {
   return (
@@ -38,15 +39,19 @@ function DiscordIcon(props: React.ComponentProps<"svg">) {
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [copiedMobile, setCopiedMobile] = useState(false);
   const pathname = usePathname();
   const { tier } = useVipTier();
+  const { toast } = useToast();
+  const contractAddress = "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
 
-  // Primary links visible on header
+  // Primary links visible on desktop header
   const primaryLinks = [
-    { name: "ORACLE", href: "/oracle", icon: Cpu },
+    { name: "$DEMP TOKEN", href: "/token", icon: Sparkles },
+    { name: "WHITEPAPER", href: "/whitepaper", icon: FileText },
+    { name: "ROADMAP", href: "/roadmap", icon: Map },
     { name: "COMMAND CENTER", href: "/command-center", icon: Terminal },
-    { name: "VIP HQ", href: "/vip", icon: Award },
-    { name: "$DEMP", href: "/token", icon: Sparkles },
+    { name: "ORACLE AI", href: "/oracle", icon: Cpu },
   ];
 
   // Secondary links collapsed into "MORE" dropdown
@@ -54,47 +59,48 @@ export function Navbar() {
     {
       title: "Protocol & Architecture",
       items: [
-        { name: "Features Overview", href: "/features", icon: Layers },
+        { name: "VIP HQ", href: "/vip", icon: Award },
         { name: "Empire Holdings", href: "/holdings", icon: Shield },
+        { name: "Features Overview", href: "/features", icon: Layers },
         { name: "System Settings", href: "/settings", icon: SettingsIcon },
-      ],
-    },
-    {
-      title: "Documentation & Alpha",
-      items: [
-        { name: "Whitepaper", href: "/whitepaper", icon: FileText },
-        { name: "Protocol Roadmap", href: "/roadmap", icon: Map },
       ],
     },
     {
       title: "Community & Support",
       items: [
-        { name: "FAQ", href: "/faq", icon: HelpCircle },
-        { name: "Credits", href: "/credits", icon: Sparkles },
+        { name: "FAQ Knowledge Base", href: "/faq", icon: HelpCircle },
+        { name: "Credits & Team", href: "/credits", icon: Sparkles },
         { name: "Contact HQ", href: "/contact", icon: Mail },
       ],
     },
   ];
 
   const socialLinks = [
-    { name: "Official Website", href: "https://darkempirelords.com", icon: Globe, color: "text-purple-400" },
-    { name: "Follow on X", href: "https://x.com/darkhacker167", icon: XIcon, color: "text-white" },
-    { name: "Join Telegram", href: "https://t.me/DarkEmpireHQ", icon: Send, color: "text-[#0088cc]" },
-    { name: "Join Discord", href: "https://discord.gg/XAfaWZSn", icon: DiscordIcon, color: "text-[#5865F2]" },
+    { name: "Website", href: "https://darkempirelords.com", icon: Globe, color: "text-purple-400" },
+    { name: "Twitter / X", href: "https://x.com/darkhacker167", icon: XIcon, color: "text-white" },
+    { name: "Telegram", href: "https://t.me/DarkEmpireHQ", icon: Send, color: "text-[#0088cc]" },
+    { name: "Discord", href: "https://discord.gg/XAfaWZSn", icon: DiscordIcon, color: "text-[#5865F2]" },
   ];
 
+  const handleCopyMobile = () => {
+    navigator.clipboard.writeText(contractAddress);
+    setCopiedMobile(true);
+    toast({ title: "Contract Copied", description: "Solana SPL address copied." });
+    setTimeout(() => setCopiedMobile(false), 2000);
+  };
+
   return (
-    <nav className="fixed top-0 w-full z-50 border-b border-purple-900/30 bg-[#09090d]/90 backdrop-blur-xl shadow-[0_4px_30px_rgba(168,85,247,0.12)]">
+    <nav className="fixed top-0 w-full z-50 border-b border-purple-900/30 bg-[#07070b]/90 backdrop-blur-2xl shadow-[0_4px_30px_rgba(168,85,247,0.12)]">
       <div className="container mx-auto px-4 lg:px-8 h-20 flex items-center justify-between">
         
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-3 group">
+        <Link href="/" className="flex items-center gap-3 group shrink-0">
           <Image 
             src="/assets/demp-logo.svg" 
             alt="Dark Empire Logo" 
             width={48}
             height={48}
-            className="h-10 w-10 md:h-11 md:w-11 transition-transform duration-300 group-hover:scale-110 drop-shadow-[0_0_12px_rgba(168,85,247,0.5)]"
+            className="h-10 w-10 md:h-11 md:w-11 transition-transform duration-300 group-hover:scale-110 drop-shadow-[0_0_12px_rgba(168,85,247,0.6)]"
           />
           <span className="font-display text-xl md:text-2xl font-black tracking-widest text-white group-hover:text-purple-300 transition-colors text-glow">
             DARK EMPIRE
@@ -102,7 +108,7 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Primary Nav */}
-        <div className="hidden lg:flex items-center gap-6">
+        <div className="hidden xl:flex items-center gap-5">
           {primaryLinks.map((link) => {
             const isActive = pathname === link.href;
             const Icon = link.icon;
@@ -110,10 +116,10 @@ export function Navbar() {
               <Link
                 key={link.name}
                 href={link.href}
-                className={`flex items-center gap-1.5 text-xs font-mono font-bold tracking-wider transition-all duration-200 uppercase px-3 py-1.5 rounded-lg ${
+                className={`flex items-center gap-1.5 text-xs font-mono font-bold tracking-wider transition-all duration-200 uppercase px-3 py-2 rounded-xl ${
                   isActive 
-                    ? "text-purple-300 bg-purple-950/60 border border-purple-500/40 text-glow" 
-                    : "text-zinc-400 hover:text-white hover:bg-zinc-900/80"
+                    ? "text-purple-200 bg-purple-950/80 border border-purple-500/50 text-glow shadow-[0_0_15px_rgba(168,85,247,0.2)]" 
+                    : "text-zinc-300 hover:text-white hover:bg-zinc-900/80"
                 }`}
               >
                 <Icon className="w-3.5 h-3.5 text-purple-400" />
@@ -125,13 +131,13 @@ export function Navbar() {
           {/* Collapsed Secondary Links Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1 text-xs font-mono font-bold tracking-wider text-zinc-400 hover:text-white uppercase px-3 py-1.5 rounded-lg hover:bg-zinc-900/80 transition-colors outline-none cursor-pointer">
+              <button className="flex items-center gap-1 text-xs font-mono font-bold tracking-wider text-zinc-300 hover:text-white uppercase px-3 py-2 rounded-xl hover:bg-zinc-900/80 transition-colors outline-none cursor-pointer">
                 <span>MORE</span>
                 <ChevronDown className="w-3.5 h-3.5 text-purple-400" />
               </button>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent className="w-64 bg-[#0c0c14]/95 border border-purple-900/40 backdrop-blur-2xl p-2 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.9),0_0_20px_rgba(168,85,247,0.2)] text-white">
+            <DropdownMenuContent className="w-64 bg-[#0a0a12]/98 border border-purple-900/40 backdrop-blur-2xl p-2 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.9),0_0_20px_rgba(168,85,247,0.2)] text-white">
               {secondaryCategories.map((cat, idx) => (
                 <div key={cat.title}>
                   {idx > 0 && <DropdownMenuSeparator className="bg-zinc-800/80 my-1" />}
@@ -167,19 +173,19 @@ export function Navbar() {
         </div>
 
         {/* Action Buttons: Wallet & Trading Engine */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-3 shrink-0">
           <CustomWalletButton />
 
           <Button
             variant="obsidian"
             asChild
-            className="h-10 px-4 flex items-center justify-center gap-2 max-w-xs"
+            className="h-10 px-4 flex items-center justify-center gap-2 max-w-xs rounded-xl"
           >
             <a
               href="https://dark-empire-operations-terminal.vercel.app"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 font-mono text-xs font-bold"
             >
               <span>TRADING ENGINE</span>
               <ExternalLink className="w-3.5 h-3.5 text-amber-400" />
@@ -189,7 +195,7 @@ export function Navbar() {
 
         {/* Mobile Hamburger Toggle */}
         <button
-          className="lg:hidden text-zinc-300 hover:text-white p-2 rounded-xl border border-zinc-800 bg-zinc-950/80"
+          className="xl:hidden text-zinc-300 hover:text-white p-2.5 rounded-xl border border-purple-900/40 bg-zinc-950/90 min-h-[44px] min-w-[44px] flex items-center justify-center"
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Toggle menu"
         >
@@ -205,16 +211,37 @@ export function Navbar() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="lg:hidden bg-[#09090d]/98 border-b border-purple-900/40 backdrop-blur-2xl overflow-hidden shadow-2xl"
+            className="xl:hidden bg-[#07070b]/98 border-b border-purple-900/40 backdrop-blur-2xl overflow-hidden shadow-2xl"
           >
             <div className="flex flex-col p-6 gap-6 max-h-[85vh] overflow-y-auto">
+              
+              {/* Contract Copy Quick Bar Mobile */}
+              <div className="p-3 rounded-xl border border-purple-500/30 bg-purple-950/40 flex items-center justify-between gap-2">
+                <div className="overflow-hidden">
+                  <p className="text-[9px] font-mono text-purple-400 uppercase tracking-widest">
+                    SOLANA CONTRACT ($DEMP)
+                  </p>
+                  <code className="text-xs font-mono text-white truncate block">
+                    {contractAddress}
+                  </code>
+                </div>
+                <Button
+                  onClick={handleCopyMobile}
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 text-xs font-mono text-purple-300 hover:bg-purple-900/50 shrink-0"
+                >
+                  {copiedMobile ? <CheckCircle className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                </Button>
+              </div>
+
               {/* Wallet & Trading Engine CTA */}
               <div className="space-y-3 pb-4 border-b border-zinc-800/80">
                 <CustomWalletButton />
                 <Button
                   variant="obsidian"
                   asChild
-                  className="w-full max-w-xs mx-auto h-11 flex items-center justify-center gap-2"
+                  className="w-full h-11 flex items-center justify-center gap-2 font-mono text-xs font-bold rounded-xl"
                 >
                   <a
                     href="https://dark-empire-operations-terminal.vercel.app"
@@ -232,7 +259,7 @@ export function Navbar() {
                 <p className="text-[10px] font-mono text-purple-400 uppercase tracking-widest">
                   Primary Command Modules
                 </p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {primaryLinks.map((link) => {
                     const isActive = pathname === link.href;
                     const Icon = link.icon;
@@ -241,10 +268,10 @@ export function Navbar() {
                         key={link.name}
                         href={link.href}
                         onClick={() => setIsOpen(false)}
-                        className={`flex items-center gap-2 p-3 rounded-xl border text-xs font-mono font-bold tracking-wider uppercase transition-all ${
+                        className={`flex items-center gap-2.5 p-3 rounded-xl border text-xs font-mono font-bold tracking-wider uppercase transition-all min-h-[44px] ${
                           isActive
                             ? "bg-purple-950/80 border-purple-500/50 text-purple-200 text-glow"
-                            : "bg-zinc-950/60 border-zinc-800 text-zinc-300 hover:text-white"
+                            : "bg-zinc-950/80 border-zinc-800 text-zinc-300 hover:text-white"
                         }`}
                       >
                         <Icon className="w-4 h-4 text-purple-400 shrink-0" />
@@ -258,11 +285,11 @@ export function Navbar() {
               {/* Secondary Navigation Categories */}
               <div className="space-y-4">
                 {secondaryCategories.map((cat) => (
-                  <div key={cat.title} className="space-y-1.5">
-                    <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
+                  <div key={cat.title} className="space-y-2">
+                    <p className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest">
                       {cat.title}
                     </p>
-                    <div className="space-y-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {cat.items.map((item) => {
                         const ItemIcon = item.icon;
                         const isActive = pathname === item.href;
@@ -271,11 +298,11 @@ export function Navbar() {
                             key={item.name}
                             href={item.href}
                             onClick={() => setIsOpen(false)}
-                            className={`flex items-center gap-2.5 py-2 px-3 text-xs font-mono rounded-lg transition-colors ${
-                              isActive ? "text-purple-300 font-bold bg-purple-950/40" : "text-zinc-400 hover:text-white"
+                            className={`flex items-center gap-2.5 py-2.5 px-3 text-xs font-mono rounded-xl border transition-colors min-h-[44px] ${
+                              isActive ? "text-purple-300 font-bold bg-purple-950/60 border-purple-500/40" : "text-zinc-300 border-zinc-900 bg-zinc-950/60 hover:text-white"
                             }`}
                           >
-                            <ItemIcon className="w-3.5 h-3.5 text-purple-400/80 shrink-0" />
+                            <ItemIcon className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                             <span>{item.name}</span>
                           </Link>
                         );
@@ -287,7 +314,7 @@ export function Navbar() {
 
               {/* Social Links */}
               <div className="pt-4 border-t border-zinc-800/80 space-y-2">
-                <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
+                <p className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest">
                   HQ Channels
                 </p>
                 <div className="grid grid-cols-2 gap-2">
@@ -298,7 +325,7 @@ export function Navbar() {
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-2 p-2 rounded-lg bg-zinc-950/80 border border-zinc-800/60 text-xs font-mono text-zinc-300 hover:text-white transition-colors"
+                      className="flex items-center gap-2 p-2.5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 text-xs font-mono text-zinc-300 hover:text-white transition-colors min-h-[44px]"
                     >
                       <link.icon className={`h-4 w-4 shrink-0 ${link.color}`} />
                       <span className="truncate">{link.name}</span>
@@ -306,6 +333,7 @@ export function Navbar() {
                   ))}
                 </div>
               </div>
+
             </div>
           </motion.div>
         )}

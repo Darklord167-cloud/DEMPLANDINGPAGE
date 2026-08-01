@@ -27,6 +27,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://darkempirelords.com'),
   title: 'Dark Empire HQ',
   description: 'Official Headquarters of Dark Empire Lords LLC. $DEMP Token Verification, Products, and Services.',
   openGraph: {
