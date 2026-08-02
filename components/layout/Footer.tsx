@@ -93,16 +93,16 @@ export function Footer() {
                 <span className="font-heading font-semibold text-lg">Follow on X</span>
                 <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
               </a>
-              <a href="https://t.me/DarkEmpireHQ" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-muted-foreground hover:text-white transition-colors group" data-testid="link-telegram">
-                <div className="h-10 w-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-[#0088cc]/50 group-hover:shadow-[0_0_15px_rgba(0,136,204,0.3)] transition-all">
-                  <Send className="h-4 w-4" />
+              <a href="https://t.me/DarkEmpireRelayBot" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-muted-foreground hover:text-white transition-colors group" data-testid="link-telegram">
+                <div className="h-10 w-10 rounded-full bg-cyan-950/30 border border-[#0088cc]/40 flex items-center justify-center group-hover:border-[#0088cc] group-hover:shadow-[0_0_15px_rgba(0,136,204,0.6)] transition-all drop-shadow-[0_0_8px_rgba(0,136,204,0.4)]">
+                  <Send className="h-4 w-4 text-[#0088cc] group-hover:text-cyan-300 transition-colors" />
                 </div>
                 <span className="font-heading font-semibold text-lg">Join Telegram</span>
                 <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-[#0088cc]" />
               </a>
-              <a href="https://discord.gg/XAfaWZSn" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-muted-foreground hover:text-white transition-colors group" data-testid="link-discord">
-                <div className="h-10 w-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-[#5865F2]/50 group-hover:shadow-[0_0_15px_rgba(88,101,242,0.3)] transition-all">
-                  <DiscordIcon className="h-4 w-4" />
+              <a href="https://discord.gg/FYVC94VD" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-muted-foreground hover:text-white transition-colors group" data-testid="link-discord">
+                <div className="h-10 w-10 rounded-full bg-indigo-950/30 border border-[#5865F2]/40 flex items-center justify-center group-hover:border-[#5865F2] group-hover:shadow-[0_0_15px_rgba(88,101,242,0.6)] transition-all drop-shadow-[0_0_8px_rgba(88,101,242,0.4)]">
+                  <DiscordIcon className="h-4 w-4 text-[#5865F2] group-hover:text-indigo-300 transition-colors" />
                 </div>
                 <span className="font-heading font-semibold text-lg">Join Discord</span>
                 <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-[#5865F2]" />

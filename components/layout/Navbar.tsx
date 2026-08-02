@@ -78,8 +78,8 @@ export function Navbar() {
   const socialLinks = [
     { name: "Website", href: "https://darkempirelords.com", icon: Globe, color: "text-purple-400" },
     { name: "Twitter / X", href: "https://x.com/darkhacker167", icon: XIcon, color: "text-white" },
-    { name: "Telegram", href: "https://t.me/DarkEmpireHQ", icon: Send, color: "text-[#0088cc]" },
-    { name: "Discord", href: "https://discord.gg/XAfaWZSn", icon: DiscordIcon, color: "text-[#5865F2]" },
+    { name: "Telegram", href: "https://t.me/DarkEmpireRelayBot", icon: Send, color: "text-[#0088cc]" },
+    { name: "Discord", href: "https://discord.gg/FYVC94VD", icon: DiscordIcon, color: "text-[#5865F2]" },
   ];
 
   const handleCopyMobile = () => {
@@ -172,8 +172,31 @@ export function Navbar() {
           </Link>
         </div>
 
-        {/* Action Buttons: Wallet & Trading Engine */}
+        {/* Action Buttons: Social Hub, Wallet & Trading Engine */}
         <div className="hidden md:flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 mr-1" data-testid="social-hub-nav-icons">
+            <a
+              href="https://t.me/DarkEmpireRelayBot"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Telegram Relay Bot"
+              aria-label="Telegram Relay Bot"
+              className="group relative p-2.5 rounded-xl bg-cyan-950/30 border border-[#0088cc]/40 text-[#0088cc] hover:bg-[#0088cc]/20 hover:border-[#0088cc] hover:shadow-[0_0_15px_rgba(0,136,204,0.6)] transition-all duration-300 drop-shadow-[0_0_8px_rgba(0,136,204,0.4)] flex items-center justify-center"
+            >
+              <Send className="h-4 w-4 group-hover:scale-110 transition-transform" />
+            </a>
+            <a
+              href="https://discord.gg/FYVC94VD"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Discord Server"
+              aria-label="Discord Server"
+              className="group relative p-2.5 rounded-xl bg-indigo-950/30 border border-[#5865F2]/40 text-[#5865F2] hover:bg-[#5865F2]/20 hover:border-[#5865F2] hover:shadow-[0_0_15px_rgba(88,101,242,0.6)] transition-all duration-300 drop-shadow-[0_0_8px_rgba(88,101,242,0.4)] flex items-center justify-center"
+            >
+              <DiscordIcon className="h-4 w-4 group-hover:scale-110 transition-transform" />
+            </a>
+          </div>
+
           <CustomWalletButton />
 
           <Button
