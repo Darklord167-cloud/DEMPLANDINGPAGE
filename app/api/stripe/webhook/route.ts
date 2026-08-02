@@ -11,6 +11,9 @@ function getStripeClient() {
   return new Stripe(secretKey);
 }
 
+// Set of processed Stripe event IDs to ensure idempotency
+const processedEvents = new Set<string>();
+
 export async function POST(req: Request) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
@@ -35,6 +38,19 @@ export async function POST(req: Request) {
     const errorMessage = err instanceof Error ? err.message : "Unknown verification error";
     console.error(`Stripe Webhook Signature Verification Error: ${errorMessage}`);
     return NextResponse.json({ message: `Webhook Error: ${errorMessage}` }, { status: 400 });
+  }
+
+  // Idempotency check
+  if (processedEvents.has(event.id)) {
+    console.log(`[Stripe Webhook] Duplicate event ${event.id} ignored`);
+    return NextResponse.json({ received: true, duplicate: true });
+  }
+  processedEvents.add(event.id);
+
+  // Keep set size bounded
+  if (processedEvents.size > 1000) {
+    const firstItem = processedEvents.values().next().value;
+    if (firstItem) processedEvents.delete(firstItem);
   }
 
   if (event.type === "checkout.session.completed") {

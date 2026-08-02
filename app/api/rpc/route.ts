@@ -1,10 +1,21 @@
 import { NextResponse } from 'next/server';
 
-const rpcEndpoints = [
-  process.env.ALCHEMY_RPC_URL,
-  process.env.HELIUS_RPC_URL,
-  process.env.QUICKNODE_RPC_URL,
-].filter(Boolean) as string[];
+const DEFAULT_FALLBACK_NODES = [
+  "https://api.mainnet-beta.solana.com",
+  "https://solana-mainnet.rpc.extrnode.com",
+  "https://rpc.ankr.com/solana"
+];
+
+function getRpcEndpoints(): string[] {
+  const custom = [
+    process.env.HELIUS_RPC_URL,
+    process.env.ALCHEMY_RPC_URL,
+    process.env.QUICKNODE_RPC_URL,
+    process.env.SOLANA_RPC_URL,
+  ].filter(Boolean) as string[];
+
+  return custom.length > 0 ? Array.from(new Set([...custom, ...DEFAULT_FALLBACK_NODES])) : DEFAULT_FALLBACK_NODES;
+}
 
 // A rudimentary in-memory counter for round-robin. 
 // Note: In serverless, this state might reset across cold starts, but it will still distribute load across concurrent instances.
@@ -12,10 +23,7 @@ let currentEndpointIndex = 0;
 
 export async function POST(req: Request) {
   try {
-    if (rpcEndpoints.length === 0) {
-      // Fallback if no custom RPCs are configured
-      rpcEndpoints.push("https://api.mainnet-beta.solana.com");
-    }
+    const rpcEndpoints = getRpcEndpoints();
 
     // Read the incoming RPC payload
     const body = await req.json();

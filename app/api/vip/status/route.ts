@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PublicKey } from '@solana/web3.js';
+import nacl from 'tweetnacl';
+import bs58 from 'bs58';
 import { storage } from '@/server/storage';
 import { getTierForBalance, getNextTierInfo, VIP_TIERS } from '@/lib/vip-tiers';
 
@@ -12,10 +14,26 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Wallet address query parameter is required' }, { status: 400 });
     }
 
+    let pubkey: PublicKey;
     try {
-      new PublicKey(wallet);
+      pubkey = new PublicKey(wallet);
     } catch {
       return NextResponse.json({ error: 'Invalid Solana PublicKey format' }, { status: 400 });
+    }
+
+    // Optional cryptographic header signature verification
+    const sigHeader = req.headers.get('x-solana-signature');
+    const msgHeader = req.headers.get('x-solana-message');
+    let signatureVerified = false;
+
+    if (sigHeader && msgHeader) {
+      try {
+        const messageBytes = new TextEncoder().encode(msgHeader);
+        const signatureBytes = bs58.decode(sigHeader);
+        signatureVerified = nacl.sign.detached.verify(messageBytes, signatureBytes, pubkey.toBytes());
+      } catch (e) {
+        console.warn('VIP Status signature header verification failed:', e);
+      }
     }
 
     const latestVerification = await storage.getLatestVipVerification(wallet);
@@ -27,6 +45,7 @@ export async function GET(req: Request) {
         tier: VIP_TIERS.none,
         dempBalance: 0,
         nextTierInfo: getNextTierInfo(0),
+        signatureVerified,
       });
     }
 
@@ -40,7 +59,7 @@ export async function GET(req: Request) {
       tier: tierDef,
       dempBalance: balance,
       nextTierInfo,
-      signatureVerified: latestVerification.signatureVerified,
+      signatureVerified: signatureVerified || latestVerification.signatureVerified,
       verifiedAt: latestVerification.verifiedAt,
     });
   } catch (error: any) {

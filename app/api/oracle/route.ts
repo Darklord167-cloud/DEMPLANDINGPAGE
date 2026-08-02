@@ -55,12 +55,44 @@ SPECIALIZATION:
 
 Always act like a high-level operator helping scale a digital empire.`;
 
+// Simple sliding window rate limiter per wallet/IP
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 10;
+
+function checkRateLimit(key: string): { allowed: boolean; retryAfterSec?: number } {
+  const now = Date.now();
+  const record = rateLimitMap.get(key);
+
+  if (!record || now > record.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true };
+  }
+
+  if (record.count >= MAX_REQUESTS_PER_WINDOW) {
+    const retryAfterSec = Math.ceil((record.resetAt - now) / 1000);
+    return { allowed: false, retryAfterSec };
+  }
+
+  record.count += 1;
+  return { allowed: true };
+}
+
 export async function POST(req: Request) {
   try {
-    const { walletAddress, signature, message, history, prompt } = await req.json();
+    const { walletAddress, signature, message, history, prompt, modelPreference } = await req.json();
 
     if (!walletAddress || !signature || !message || !prompt) {
       return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
+    }
+
+    // Rate limiting check by wallet address
+    const rateLimit = checkRateLimit(walletAddress);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: `Rate limit exceeded. Please wait ${rateLimit.retryAfterSec} seconds before sending another request.` },
+        { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfterSec) } }
+      );
     }
 
     // 1. Verify Solana Wallet Signature
@@ -135,9 +167,12 @@ export async function POST(req: Request) {
       parts: [{ text: prompt }]
     });
 
+    // Select model dynamically (default gemini-2.5-flash or gemini-2.5-pro)
+    const selectedModel = modelPreference === 'pro' ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
+
     // 4. Call Gemini API
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash", 
+      model: selectedModel, 
       contents: aiContents,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
@@ -156,6 +191,7 @@ export async function POST(req: Request) {
     // 6. Return response
     return NextResponse.json({ 
       response: aiResponseText,
+      modelUsed: selectedModel,
       remainingCredits: user.credits - QUERY_COST
     });
 

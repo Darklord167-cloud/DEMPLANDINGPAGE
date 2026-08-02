@@ -102,6 +102,7 @@ export default function OraclePage() {
   const { tier, dempBalance } = useVipTier();
   const [profile, setProfile] = useState<any>(null);
   const [telemetry, setTelemetry] = useState<TokenTelemetry>(DEFAULT_TELEMETRY);
+  const [modelPreference, setModelPreference] = useState<"flash" | "pro">("flash");
   const [messages, setMessages] = useState<{ role: "user" | "oracle"; content: string }[]>([
     { role: "oracle", content: "ULTRON MIND CORE ONLINE. Quantum neural links calibrated. State your command, Lord." },
   ]);
@@ -256,7 +257,8 @@ export default function OraclePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: userMessage,
-          history: history.slice(0, -1)
+          history: history.slice(0, -1),
+          modelPreference,
         }),
       });
 
@@ -325,6 +327,30 @@ export default function OraclePage() {
           <Link href="/vip">
             <VipBadge tier={tier} size="sm" showIcon />
           </Link>
+
+          {/* Model Switcher Pill */}
+          <div className="flex items-center bg-[#041635]/90 border border-[#ff6600]/40 p-1 rounded-full text-xs font-mono backdrop-blur-md shadow-[0_0_15px_rgba(255,102,0,0.2)]">
+            <button
+              onClick={() => setModelPreference("flash")}
+              className={`px-3 py-1 rounded-full transition-all ${
+                modelPreference === "flash"
+                  ? "bg-[#ff6600] text-white font-bold shadow-[0_0_10px_rgba(255,102,0,0.5)]"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              FLASH 2.5
+            </button>
+            <button
+              onClick={() => setModelPreference("pro")}
+              className={`px-3 py-1 rounded-full transition-all ${
+                modelPreference === "pro"
+                  ? "bg-[#00d2ff] text-slate-950 font-bold shadow-[0_0_10px_rgba(0,210,255,0.5)]"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              PRO 2.5
+            </button>
+          </div>
         </div>
 
         {/* High-Tech HUD Icon Badge */}
