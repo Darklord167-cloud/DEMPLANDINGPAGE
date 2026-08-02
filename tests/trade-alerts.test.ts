@@ -106,4 +106,35 @@ describe('Trade Alerts Webhook API Route', () => {
     expect(json.relays.telegram.success).toBe(true);
     expect(mockFetch).toHaveBeenCalledTimes(2);
   });
+
+  it('should process trade alerts using alternative field aliases (tradeSizeUsd, operationType, traderWallet, txSignature, x-relay-secret-key)', async () => {
+    process.env.RELAY_SECRET_KEY = 'Dondeestalabibloteca$1';
+
+    const req = new Request('http://localhost/api/webhooks/trade-alerts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-relay-secret-key': 'Dondeestalabibloteca$1',
+      },
+      body: JSON.stringify({
+        tradeSizeUsd: 5000.00,
+        operationType: 'BUY',
+        tokenSymbol: '$DEMP',
+        tokenAmount: 103092,
+        traderWallet: '8yGrj6d9p4WfPRkunVo1NwkRSX3VTo43ZS39xu7jupx',
+        timestamp: '2026-08-02T19:15:00Z',
+        txSignature: '5vabY3...',
+      }),
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.success).toBe(true);
+    expect(json.alerted).toBe(true);
+    expect(json.whaleAlert.amountUsd).toBe(5000);
+    expect(json.whaleAlert.type).toBe('BUY');
+    expect(json.whaleAlert.trader).toBe('8yGrj6d9p4WfPRkunVo1NwkRSX3VTo43ZS39xu7jupx');
+    expect(json.whaleAlert.signature).toBe('5vabY3...');
+  });
 });

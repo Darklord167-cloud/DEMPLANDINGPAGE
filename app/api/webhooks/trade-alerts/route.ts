@@ -3,10 +3,12 @@ import { NextResponse } from 'next/server';
 interface TradePayload {
   amountUsd?: number;
   usdValue?: number;
+  tradeSizeUsd?: number;
   amount_usd?: number;
   valueUsd?: number;
   type?: string;
   side?: string;
+  operationType?: string;
   tokenSymbol?: string;
   symbol?: string;
   token?: string;
@@ -14,12 +16,14 @@ interface TradePayload {
   amount?: number | string;
   trader?: string;
   wallet?: string;
+  traderWallet?: string;
   account?: string;
   buyer?: string;
   seller?: string;
   signature?: string;
   txHash?: string;
   txId?: string;
+  txSignature?: string;
   timestamp?: string | number;
   priceUsd?: number;
   price?: number;
@@ -49,6 +53,7 @@ export async function POST(req: Request) {
     const rawAmountUsd =
       rawTrade.amountUsd ??
       rawTrade.usdValue ??
+      rawTrade.tradeSizeUsd ??
       rawTrade.amount_usd ??
       rawTrade.valueUsd ??
       (rawTrade.amount && rawTrade.price ? Number(rawTrade.amount) * Number(rawTrade.price) : undefined) ??
@@ -70,11 +75,11 @@ export async function POST(req: Request) {
     }
 
     // 4. Format Trade Data for WHALE ALERT Payload
-    const type = (rawTrade.type || rawTrade.side || 'SWAP').toUpperCase();
+    const type = (rawTrade.type || rawTrade.side || rawTrade.operationType || 'SWAP').toUpperCase();
     const tokenSymbol = rawTrade.tokenSymbol || rawTrade.symbol || rawTrade.token || '$DEMP';
     const tokenAmount = rawTrade.tokenAmount ?? rawTrade.amount ?? 'N/A';
-    const trader = rawTrade.trader || rawTrade.wallet || rawTrade.account || rawTrade.buyer || rawTrade.seller || 'Unknown';
-    const signature = rawTrade.signature || rawTrade.txHash || rawTrade.txId || '';
+    const trader = rawTrade.trader || rawTrade.wallet || rawTrade.traderWallet || rawTrade.account || rawTrade.buyer || rawTrade.seller || 'Unknown';
+    const signature = rawTrade.signature || rawTrade.txHash || rawTrade.txId || rawTrade.txSignature || '';
     const timestamp = rawTrade.timestamp ? new Date(rawTrade.timestamp).toISOString() : new Date().toISOString();
 
     const formattedUsd = new Intl.NumberFormat('en-US', {
