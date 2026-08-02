@@ -1,5 +1,6 @@
 import { CommandCenter } from "@/components/sections/CommandCenter";
 import { GeckoTerminalChart } from "@/components/GeckoTerminalChart";
+import { RealTimeTradeStream } from "@/components/RealTimeTradeStream";
 import { TerminalSquare } from "lucide-react";
 
 export default function CommandCenterPage() {
@@ -41,9 +42,14 @@ export default function CommandCenterPage() {
           <CommandCenter />
         </div>
 
-        {/* Live DEX Chart Telemetry Section */}
-        <div className="pt-4">
-          <GeckoTerminalChart height={450} title="$DEMP Command Center Market Telemetry" />
+        {/* Live DEX Chart & Real-Time Trade Stream Terminal Section */}
+        <div className="pt-4 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          <div className="lg:col-span-2">
+            <GeckoTerminalChart height={520} title="$DEMP Command Center Market Telemetry" />
+          </div>
+          <div className="lg:col-span-1">
+            <RealTimeTradeStream height={520} />
+          </div>
         </div>
         
       </div>

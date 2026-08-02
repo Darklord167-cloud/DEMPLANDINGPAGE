@@ -18,6 +18,7 @@ import {
 import { motion } from "motion/react";
 import { JupiterSwapWidget } from "@/components/JupiterSwapWidget";
 import { GeckoTerminalChart } from "@/components/GeckoTerminalChart";
+import { RealTimeTradeStream } from "@/components/RealTimeTradeStream";
 import { 
   fetchTokenTelemetry, 
   formatUsdValue, 
@@ -187,9 +188,14 @@ export default function HoldingsPage() {
           </div>
         </div>
 
-        {/* GECKO TERMINAL LIVE CHART WIDGET */}
-        <div className="space-y-4">
-          <GeckoTerminalChart height={480} />
+        {/* GECKO TERMINAL LIVE CHART & REAL-TIME TRADE STREAM WIDGET */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          <div className="lg:col-span-2">
+            <GeckoTerminalChart height={520} />
+          </div>
+          <div className="lg:col-span-1">
+            <RealTimeTradeStream height={520} />
+          </div>
         </div>
 
         {/* COMPONENT CARDS GRID */}
