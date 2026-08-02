@@ -1,12 +1,50 @@
 import { NextResponse } from 'next/server';
 
+const DEMP_TOKEN_MINT = '8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx';
+
+interface HeliusTokenTransfer {
+  userAccount?: string;
+  tokenAccount?: string;
+  rawTokenAmount?: {
+    tokenAmount?: string | number;
+    decimals?: number;
+  };
+  tokenAmount?: number | string;
+  mint?: string;
+  symbol?: string;
+}
+
+interface HeliusSwapEvent {
+  nativeInput?: any;
+  nativeOutput?: any;
+  tokenInputs?: HeliusTokenTransfer[];
+  tokenOutputs?: HeliusTokenTransfer[];
+  amountUsd?: number;
+  usdValue?: number;
+  tradeSizeUsd?: number;
+  tokenAmount?: number | string;
+}
+
 interface TradePayload {
+  description?: string;
+  type?: string;
+  source?: string;
+  feePayer?: string;
+  signature?: string;
+  txSignature?: string;
+  txHash?: string;
+  txId?: string;
+  timestamp?: string | number;
+  events?: {
+    swap?: HeliusSwapEvent;
+    SWAP?: HeliusSwapEvent;
+  };
+  swap?: HeliusSwapEvent;
   amountUsd?: number;
   usdValue?: number;
   tradeSizeUsd?: number;
   amount_usd?: number;
   valueUsd?: number;
-  type?: string;
   side?: string;
   operationType?: string;
   tokenSymbol?: string;
@@ -20,11 +58,6 @@ interface TradePayload {
   account?: string;
   buyer?: string;
   seller?: string;
-  signature?: string;
-  txHash?: string;
-  txId?: string;
-  txSignature?: string;
-  timestamp?: string | number;
   priceUsd?: number;
   price?: number;
   chat_id?: string;
@@ -46,11 +79,79 @@ export async function POST(req: Request) {
       }
     }
 
-    // 2. Parse Incoming Payload
+    // 2. Parse Incoming Payload (Supports Helius Enhanced Webhook array format & direct object payloads)
     const body = await req.json().catch(() => ({}));
-    const rawTrade: TradePayload = body.trade || body.payload || (Array.isArray(body) ? body[0] : body) || {};
+    let rawTrade: TradePayload = {};
 
+    if (Array.isArray(body)) {
+      // Helius sends an array of EnhancedTransaction objects.
+      // Extract the first transaction where type === "SWAP"
+      const swapTx = body.find(
+        (tx: any) =>
+          tx &&
+          typeof tx === 'object' &&
+          ((tx.type && String(tx.type).toUpperCase() === 'SWAP') || tx.events?.swap || tx.events?.SWAP)
+      );
+      rawTrade = swapTx || body[0] || {};
+    } else if (body && typeof body === 'object') {
+      if (Array.isArray(body.data)) {
+        const swapTx = body.data.find(
+          (tx: any) =>
+            tx &&
+            typeof tx === 'object' &&
+            ((tx.type && String(tx.type).toUpperCase() === 'SWAP') || tx.events?.swap || tx.events?.SWAP)
+        );
+        rawTrade = swapTx || body.data[0] || {};
+      } else {
+        rawTrade = body.trade || body.payload || body;
+      }
+    }
+
+    // 3. Extract Helius events.swap if present
+    const swapEvent = rawTrade.events?.swap || rawTrade.events?.SWAP || rawTrade.swap;
+
+    let derivedType: string | undefined;
+    let derivedTokenAmount: number | string | undefined;
+    let derivedAmountUsd: number | undefined;
+
+    if (swapEvent) {
+      // Determine BUY vs SELL based on $DEMP direction in events.swap:
+      // If $DEMP is in tokenOutputs (going TO the user), it's a BUY.
+      // If $DEMP is in tokenInputs (going FROM the user to the pool), it's a SELL.
+      const dempOutput = swapEvent.tokenOutputs?.find(
+        (t) => t.mint === DEMP_TOKEN_MINT || t.symbol === '$DEMP' || t.symbol === 'DEMP'
+      );
+      const dempInput = swapEvent.tokenInputs?.find(
+        (t) => t.mint === DEMP_TOKEN_MINT || t.symbol === '$DEMP' || t.symbol === 'DEMP'
+      );
+
+      if (dempOutput) {
+        derivedType = 'BUY';
+        if (dempOutput.tokenAmount !== undefined) {
+          derivedTokenAmount = Number(dempOutput.tokenAmount);
+        } else if (dempOutput.rawTokenAmount?.tokenAmount !== undefined) {
+          const decimals = dempOutput.rawTokenAmount.decimals ?? 6;
+          derivedTokenAmount = Number(dempOutput.rawTokenAmount.tokenAmount) / Math.pow(10, decimals);
+        }
+      } else if (dempInput) {
+        derivedType = 'SELL';
+        if (dempInput.tokenAmount !== undefined) {
+          derivedTokenAmount = Number(dempInput.tokenAmount);
+        } else if (dempInput.rawTokenAmount?.tokenAmount !== undefined) {
+          const decimals = dempInput.rawTokenAmount.decimals ?? 6;
+          derivedTokenAmount = Number(dempInput.rawTokenAmount.tokenAmount) / Math.pow(10, decimals);
+        }
+      }
+
+      derivedAmountUsd = swapEvent.amountUsd ?? swapEvent.usdValue ?? swapEvent.tradeSizeUsd;
+      if (derivedTokenAmount === undefined && swapEvent.tokenAmount !== undefined) {
+        derivedTokenAmount = swapEvent.tokenAmount;
+      }
+    }
+
+    // 4. Calculate Final Trade Telemetry
     const rawAmountUsd =
+      derivedAmountUsd ??
       rawTrade.amountUsd ??
       rawTrade.usdValue ??
       rawTrade.tradeSizeUsd ??
@@ -61,7 +162,7 @@ export async function POST(req: Request) {
 
     const amountUsd = Number(rawAmountUsd || 0);
 
-    // 3. Webhook Threshold Check (> $1,000 USD)
+    // 5. Webhook Threshold Check (> $1,000 USD)
     if (amountUsd <= 1000) {
       return NextResponse.json(
         {
@@ -74,13 +175,43 @@ export async function POST(req: Request) {
       );
     }
 
-    // 4. Format Trade Data for WHALE ALERT Payload
-    const type = (rawTrade.type || rawTrade.side || rawTrade.operationType || 'SWAP').toUpperCase();
+    // Format Trade Data for WHALE ALERT Payload
+    const type = (
+      derivedType ||
+      rawTrade.operationType ||
+      rawTrade.type ||
+      rawTrade.side ||
+      'SWAP'
+    ).toUpperCase();
+
     const tokenSymbol = rawTrade.tokenSymbol || rawTrade.symbol || rawTrade.token || '$DEMP';
-    const tokenAmount = rawTrade.tokenAmount ?? rawTrade.amount ?? 'N/A';
-    const trader = rawTrade.trader || rawTrade.wallet || rawTrade.traderWallet || rawTrade.account || rawTrade.buyer || rawTrade.seller || 'Unknown';
-    const signature = rawTrade.signature || rawTrade.txHash || rawTrade.txId || rawTrade.txSignature || '';
-    const timestamp = rawTrade.timestamp ? new Date(rawTrade.timestamp).toISOString() : new Date().toISOString();
+    const tokenAmount = derivedTokenAmount ?? rawTrade.tokenAmount ?? rawTrade.amount ?? 'N/A';
+    const trader =
+      rawTrade.feePayer ||
+      rawTrade.traderWallet ||
+      rawTrade.trader ||
+      rawTrade.wallet ||
+      rawTrade.account ||
+      rawTrade.buyer ||
+      rawTrade.seller ||
+      'Unknown';
+
+    const signature =
+      rawTrade.signature ||
+      rawTrade.txSignature ||
+      rawTrade.txHash ||
+      rawTrade.txId ||
+      '';
+
+    let timestamp: string;
+    if (typeof rawTrade.timestamp === 'number') {
+      const ms = rawTrade.timestamp < 1e11 ? rawTrade.timestamp * 1000 : rawTrade.timestamp;
+      timestamp = new Date(ms).toISOString();
+    } else if (rawTrade.timestamp) {
+      timestamp = new Date(rawTrade.timestamp).toISOString();
+    } else {
+      timestamp = new Date().toISOString();
+    }
 
     const formattedUsd = new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -140,7 +271,7 @@ export async function POST(req: Request) {
       .filter(Boolean)
       .join('\n');
 
-    // 5. Broadcast Handlers (Discord & Telegram)
+    // 6. Broadcast Handlers (Discord & Telegram)
     const relayResults = await Promise.allSettled([
       // Discord Relay Handler
       (async () => {
@@ -226,3 +357,4 @@ export async function POST(req: Request) {
     );
   }
 }
+

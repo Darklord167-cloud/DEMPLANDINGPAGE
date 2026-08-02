@@ -137,4 +137,62 @@ describe('Trade Alerts Webhook API Route', () => {
     expect(json.whaleAlert.trader).toBe('8yGrj6d9p4WfPRkunVo1NwkRSX3VTo43ZS39xu7jupx');
     expect(json.whaleAlert.signature).toBe('5vabY3...');
   });
+
+  it('should process Helius Enhanced Webhook array payloads with SWAP event schema mapping', async () => {
+    process.env.DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/123/abc';
+
+    const mockFetch = vi.fn().mockImplementation(() =>
+      Promise.resolve(new Response(null, { status: 204 }))
+    );
+    vi.stubGlobal('fetch', mockFetch);
+
+    const heliusPayload = [
+      {
+        description: 'Swap 5,000 USDC for 103,092 DEMP on Jupiter',
+        type: 'SWAP',
+        source: 'JUPITER',
+        feePayer: '8yGrj6d9p4WfPRkunVo1NwkRSX3VTo43ZS39xu7jupx',
+        signature: '5HeliusTxSignature123456789',
+        timestamp: 1722626100,
+        events: {
+          swap: {
+            amountUsd: 5500.00,
+            tokenInputs: [
+              {
+                userAccount: '8yGrj6d9p4WfPRkunVo1NwkRSX3VTo43ZS39xu7jupx',
+                mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+                symbol: 'USDC',
+                tokenAmount: 5500,
+              },
+            ],
+            tokenOutputs: [
+              {
+                userAccount: '8yGrj6d9p4WfPRkunVo1NwkRSX3VTo43ZS39xu7jupx',
+                mint: '8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx',
+                symbol: '$DEMP',
+                tokenAmount: 113400,
+              },
+            ],
+          },
+        },
+      },
+    ];
+
+    const req = new Request('http://localhost/api/webhooks/trade-alerts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(heliusPayload),
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.success).toBe(true);
+    expect(json.alerted).toBe(true);
+    expect(json.whaleAlert.type).toBe('BUY');
+    expect(json.whaleAlert.amountUsd).toBe(5500);
+    expect(json.whaleAlert.tokenAmount).toBe('113,400');
+    expect(json.whaleAlert.trader).toBe('8yGrj6d9p4WfPRkunVo1NwkRSX3VTo43ZS39xu7jupx');
+    expect(json.whaleAlert.signature).toBe('5HeliusTxSignature123456789');
+  });
 });
