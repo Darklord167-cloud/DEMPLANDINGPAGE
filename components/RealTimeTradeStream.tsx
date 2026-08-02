@@ -34,6 +34,7 @@ export function RealTimeTradeStream({
     trades,
     stats,
     isConnected,
+    isLiveWs,
     isPaused,
     poolAddress: currentPool,
     togglePause,
@@ -95,7 +96,11 @@ export function RealTimeTradeStream({
                     !isPaused && isConnected ? "bg-emerald-400 animate-ping" : "bg-zinc-500"
                   }`}
                 />
-                {!isPaused && isConnected ? "STREAM ACTIVE" : "STREAM PAUSED"}
+                {!isPaused && isConnected
+                  ? isLiveWs
+                    ? "BIRDEYE LIVE WS"
+                    : "STREAM ACTIVE"
+                  : "STREAM PAUSED"}
               </span>
             </div>
             <p className="text-[11px] font-mono text-zinc-400 truncate">

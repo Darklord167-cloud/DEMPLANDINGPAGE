@@ -39,25 +39,19 @@ function generateRandomTxHash(): string {
 }
 
 /**
- * Generate a single simulated trade event.
- * Probability distribution:
- * ~20% chance of a WHALE ALERT trade (USD value > $1,000 up to $25,000)
- * ~80% chance of a standard trade ($25 - $950)
+ * Generate a single simulated trade event for fallback when live WebSocket is offline.
  */
 function createMockTrade(): TradeEvent {
   const isWhale = Math.random() < 0.22;
-  const isBuy = Math.random() < 0.65; // Slightly bullish bias
+  const isBuy = Math.random() < 0.65;
 
   let amountUsd: number;
   if (isWhale) {
-    // Whale trade: $1,050 to $28,500
     amountUsd = parseFloat((1050 + Math.random() * 27450).toFixed(2));
   } else {
-    // Standard trade: $20 to $980
     amountUsd = parseFloat((20 + Math.random() * 960).toFixed(2));
   }
 
-  // Token price estimated ~$0.0485 USD per $DEMP
   const dempPriceUsd = 0.0485;
   const tokenAmount = Math.round(amountUsd / dempPriceUsd);
 
@@ -74,7 +68,7 @@ function createMockTrade(): TradeEvent {
 }
 
 /**
- * Initial historical seed data for realistic initial render
+ * Initial historical seed data
  */
 function getInitialTrades(): TradeEvent[] {
   const now = Date.now();
@@ -145,6 +139,7 @@ export function useTradeStream({
 }: UseTradeStreamOptions = {}) {
   const [trades, setTrades] = useState<TradeEvent[]>(getInitialTrades);
   const [isConnected, setIsConnected] = useState<boolean>(true);
+  const [isLiveWs, setIsLiveWs] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(!autoStart);
   const [stats, setStats] = useState({
     totalVolumeUsd: 24750.00,
@@ -154,6 +149,7 @@ export function useTradeStream({
   });
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
   const addTrade = useCallback((newTrade: TradeEvent) => {
     setTrades((prev) => [newTrade, ...prev.slice(0, maxTrades - 1)]);
@@ -165,28 +161,122 @@ export function useTradeStream({
     }));
   }, [maxTrades]);
 
-  // Simulated WebSocket Stream Loop
+  // Birdeye WebSocket & Fallback Data Pipeline
   useEffect(() => {
-    if (isPaused || !isConnected) {
-      if (timerRef.current) clearInterval(timerRef.current);
+    if (isPaused) {
+      setIsConnected(false);
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
       return;
     }
 
-    const scheduleNextTrade = () => {
-      // Random delay between 2 to 4.5 seconds
-      const delay = Math.floor(2000 + Math.random() * 2500);
-      timerRef.current = setTimeout(() => {
-        addTrade(createMockTrade());
-        scheduleNextTrade();
-      }, delay);
-    };
+    const apiKey = process.env.NEXT_PUBLIC_BIRDEYE_API_KEY;
 
-    scheduleNextTrade();
+    // If Birdeye API Key is missing or in mock mode, use simulated websocket feed
+    if (!apiKey) {
+      setIsConnected(true);
+      setIsLiveWs(false);
+
+      const scheduleMockTrade = () => {
+        const delay = Math.floor(2000 + Math.random() * 2500);
+        timerRef.current = setTimeout(() => {
+          addTrade(createMockTrade());
+          scheduleMockTrade();
+        }, delay);
+      };
+
+      scheduleMockTrade();
+
+      return () => {
+        if (timerRef.current) clearTimeout(timerRef.current);
+      };
+    }
+
+    // Connect to Live Birdeye WebSocket with echo-protocol
+    const wsUrl = `wss://public-api.birdeye.so/socket/solana?x-api-key=${apiKey}`;
+    let ws: WebSocket | null = null;
+
+    try {
+      ws = new WebSocket(wsUrl, "echo-protocol");
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        setIsConnected(true);
+        setIsLiveWs(true);
+
+        // Send Birdeye SUBSCRIBE_TXS payload for $DEMP pool
+        const subscribePayload = {
+          type: "SUBSCRIBE_TXS",
+          data: {
+            queryType: "simple",
+            address: poolAddress,
+            txsType: "swap",
+          },
+        };
+        ws?.send(JSON.stringify(subscribePayload));
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+
+          // Parse Birdeye TXS_DATA event
+          if (message.type === "TXS_DATA" && message.data) {
+            const rawData = message.data;
+            const tradeData = rawData.tx || rawData;
+
+            const sideRaw = String(tradeData.side || tradeData.type || "BUY").toUpperCase();
+            const side: "BUY" | "SELL" = sideRaw === "SELL" ? "SELL" : "BUY";
+            const amountUsd = Number(tradeData.volumeUSD || tradeData.usdValue || tradeData.amountUsd || 0);
+            const tokenAmount = Number(tradeData.amount || tradeData.tokenAmount || 0);
+            const wallet = tradeData.owner || tradeData.trader || tradeData.signer || "Unknown";
+            const txHash = tradeData.txHash || tradeData.hash || tradeData.signature || `tx-${Date.now()}`;
+
+            const newTrade: TradeEvent = {
+              id: txHash,
+              type: side,
+              tokenAmount,
+              amountUsd,
+              timestamp: new Date(tradeData.blockTime ? tradeData.blockTime * 1000 : Date.now()),
+              wallet,
+              txHash,
+              isWhale: amountUsd > 1000,
+            };
+
+            addTrade(newTrade);
+          }
+        } catch (err) {
+          console.error("[Birdeye WS Message Error]:", err);
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.warn("[Birdeye WS Error]: Fallback active", error);
+        setIsConnected(false);
+      };
+
+      ws.onclose = () => {
+        setIsConnected(false);
+      };
+    } catch (err) {
+      console.warn("[Birdeye WS Initialization Error]:", err);
+      setIsConnected(false);
+    }
 
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      if (ws) {
+        ws.close();
+      }
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
     };
-  }, [isPaused, isConnected, addTrade]);
+  }, [isPaused, poolAddress, addTrade]);
 
   const togglePause = () => setIsPaused((prev) => !prev);
 
@@ -204,6 +294,7 @@ export function useTradeStream({
     trades,
     stats,
     isConnected,
+    isLiveWs,
     isPaused,
     poolAddress,
     togglePause,
