@@ -15,6 +15,6 @@ export const SOLANA_RPC_ENDPOINTS = [
 ];
 
 // GeckoTerminal Pool Address for DEMP (Solana)
-export const GECKOTERMINAL_POOL_ADDRESS = "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
+export const GECKOTERMINAL_POOL_ADDRESS = "6Higx2gdaqYaukrkNomp1pVJX8uQNHAhavLE7qFnHjYD";
 
 export const JUPITER_SWAP_BASE_URL = "https://jup.ag/swap";

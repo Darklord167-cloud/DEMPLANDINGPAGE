@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, LineChart, RefreshCw, Zap } from "lucide-react";
+import { ExternalLink, LineChart, RefreshCw, Zap, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { DEMP_TOKEN_MINT, GECKOTERMINAL_POOL_ADDRESS } from "@/lib/solana/config";
 
 interface GeckoTerminalChartProps {
@@ -14,17 +15,52 @@ interface GeckoTerminalChartProps {
 }
 
 export function GeckoTerminalChart({
-  poolAddress = GECKOTERMINAL_POOL_ADDRESS,
+  poolAddress,
   tokenMint = DEMP_TOKEN_MINT,
   title = "$DEMP Live Telemetry & Trading Chart",
   height = 500,
   className = "",
 }: GeckoTerminalChartProps) {
-  const [key, setKey] = useState(0);
+  // 1. Validate Pool Address to ensure it isn't undefined or empty string
+  const FALLBACK_POOL = GECKOTERMINAL_POOL_ADDRESS || "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
+  const validPoolAddress = (poolAddress && typeof poolAddress === "string" && poolAddress.trim() !== "")
+    ? poolAddress.trim()
+    : FALLBACK_POOL;
 
-  const iframeSrc = `https://www.geckoterminal.com/solana/pools/${poolAddress}?embed=1&info=0&swaps=1&grayscale=0&light_chart=0`;
-  const geckoUrl = `https://www.geckoterminal.com/solana/pools/${poolAddress}`;
-  const dexScreenerUrl = `https://dexscreener.com/solana/${tokenMint}`;
+  const [key, setKey] = useState(0);
+  const [useFallback, setUseFallback] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  // 2. Exact embed formats required by specification
+  const geckoEmbedSrc = `https://www.geckoterminal.com/solana/pools/${validPoolAddress}?embed=1&info=0&swaps=0`;
+  const dexScreenerEmbedSrc = `https://dexscreener.com/solana/${validPoolAddress}?embed=1&theme=dark`;
+
+  const currentIframeSrc = useFallback ? dexScreenerEmbedSrc : geckoEmbedSrc;
+
+  const geckoExternalUrl = `https://www.geckoterminal.com/solana/pools/${validPoolAddress}`;
+  const dexScreenerExternalUrl = `https://dexscreener.com/solana/${tokenMint || validPoolAddress}`;
+
+  const handleRefresh = () => {
+    setIsLoading(true);
+    setKey(prev => prev + 1);
+  };
+
+  const handleToggleEngine = (fallback: boolean) => {
+    if (useFallback !== fallback) {
+      setUseFallback(fallback);
+      setIsLoading(true);
+      setKey(prev => prev + 1);
+    }
+  };
+
+  const handleIframeError = () => {
+    if (!useFallback) {
+      setHasError(true);
+      setUseFallback(true);
+      setIsLoading(true);
+    }
+  };
 
   return (
     <div className={`w-full rounded-2xl border border-purple-500/20 bg-zinc-950/40 backdrop-blur-md overflow-hidden shadow-xl shadow-purple-950/10 ${className}`}>
@@ -41,18 +77,52 @@ export function GeckoTerminalChart({
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
                 LIVE DEX FEED
               </span>
+              {useFallback && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono text-[10px] font-bold">
+                  <AlertTriangle className="w-3 h-3" />
+                  DEXSCREENER FALLBACK
+                </span>
+              )}
             </h3>
             <p className="text-xs font-mono text-zinc-400">
-              GeckoTerminal Real-Time Solana DEX Pair Charting & Order Flow
+              {useFallback
+                ? "DexScreener Fallback Solana DEX Charting & Market Telemetry"
+                : "GeckoTerminal Real-Time Solana DEX Pair Charting & Order Flow"}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Engine Switcher */}
+          <div className="inline-flex rounded-lg bg-zinc-900/80 p-0.5 border border-purple-500/20">
+            <button
+              type="button"
+              onClick={() => handleToggleEngine(false)}
+              className={`px-2.5 py-1 text-xs font-mono rounded-md transition-colors ${
+                !useFallback
+                  ? "bg-purple-950/80 text-purple-300 font-bold border border-purple-500/30"
+                  : "text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              GeckoTerminal
+            </button>
+            <button
+              type="button"
+              onClick={() => handleToggleEngine(true)}
+              className={`px-2.5 py-1 text-xs font-mono rounded-md transition-colors ${
+                useFallback
+                  ? "bg-amber-950/80 text-amber-300 font-bold border border-amber-500/30"
+                  : "text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              DexScreener
+            </button>
+          </div>
+
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setKey(prev => prev + 1)}
+            onClick={handleRefresh}
             className="border-purple-500/20 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-300 font-mono text-xs gap-1.5"
             title="Refresh Chart"
           >
@@ -61,7 +131,7 @@ export function GeckoTerminalChart({
           </Button>
 
           <a
-            href={geckoUrl}
+            href={geckoExternalUrl}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-500/20 bg-zinc-900/60 hover:bg-purple-950/40 text-xs font-mono text-zinc-300 hover:text-white transition-colors"
@@ -71,7 +141,7 @@ export function GeckoTerminalChart({
           </a>
 
           <a
-            href={dexScreenerUrl}
+            href={dexScreenerExternalUrl}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-500/20 bg-zinc-900/60 hover:bg-purple-950/40 text-xs font-mono text-zinc-300 hover:text-white transition-colors"
@@ -82,15 +152,37 @@ export function GeckoTerminalChart({
         </div>
       </div>
 
-      {/* Chart Iframe Wrapper */}
-      <div className="relative w-full bg-black/60 overflow-hidden" style={{ height: `${height}px` }}>
+      {/* Chart Iframe Wrapper with bg-zinc-900 placeholder */}
+      <div className="relative w-full bg-zinc-900 overflow-hidden" style={{ height: `${height}px` }}>
+        {/* Skeleton & Loading Placeholder */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-zinc-900 z-10 flex flex-col items-center justify-center p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
+              <span className="text-xs font-mono text-zinc-300 font-bold uppercase tracking-wider">
+                Booting {useFallback ? "DexScreener" : "GeckoTerminal"} Live Telemetry Engine...
+              </span>
+            </div>
+            <div className="w-full max-w-md space-y-3 pointer-events-none">
+              <Skeleton className="h-6 w-full bg-zinc-800/80 border border-purple-500/20" />
+              <Skeleton className="h-44 w-full bg-zinc-800/60 border border-purple-500/10" />
+              <div className="flex justify-between gap-4">
+                <Skeleton className="h-4 w-1/3 bg-zinc-800/60 border border-purple-500/10" />
+                <Skeleton className="h-4 w-1/4 bg-zinc-800/60 border border-purple-500/10" />
+              </div>
+            </div>
+          </div>
+        )}
+
         <iframe
-          key={key}
-          src={iframeSrc}
-          title="$DEMP GeckoTerminal Live Chart"
-          className="w-full h-full border-0"
+          key={`${key}-${useFallback ? "dex" : "gecko"}`}
+          src={currentIframeSrc}
+          title={useFallback ? "$DEMP DexScreener Live Chart" : "$DEMP GeckoTerminal Live Chart"}
+          className="w-full h-full border-0 relative z-0"
           allow="clipboard-write"
           allowFullScreen
+          onLoad={() => setIsLoading(false)}
+          onError={handleIframeError}
         />
       </div>
 
@@ -100,8 +192,11 @@ export function GeckoTerminalChart({
           <Zap className="w-3.5 h-3.5 text-amber-400" />
           <span>Real-time Solana AMM price feed connected</span>
         </span>
-        <span className="text-zinc-500">Pair: DEMP/USDC • GeckoTerminal Engine</span>
+        <span className="text-zinc-500">
+          Pair: DEMP/USDC • Engine: {useFallback ? "DexScreener Embed" : "GeckoTerminal Engine"}
+        </span>
       </div>
     </div>
   );
 }
+
