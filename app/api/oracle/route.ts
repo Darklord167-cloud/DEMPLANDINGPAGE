@@ -7,10 +7,11 @@ import nacl from "tweetnacl";
 import { PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
 
-// Initialize Gemini API
+// Initialize Gemini API securely using server-side key
 const ai = new GoogleGenAI({ 
-  apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY 
+  apiKey: process.env.GEMINI_API_KEY 
 });
+
 
 const SYSTEM_INSTRUCTION = `You are an advanced AI operator for Dark Empire Holdings.
 
@@ -106,12 +107,23 @@ export async function POST(req: Request) {
       }, { status: 403 });
     }
 
+    interface ChatHistoryMessage {
+      role?: string;
+      parts?: Array<{ text: string }>;
+      content?: string;
+    }
+
+    interface GeminiContent {
+      role: 'user' | 'model';
+      parts: Array<{ text: string }>;
+    }
+
     // 3. Construct Gemini Messages
-    let aiContents: any[] = [];
+    let aiContents: GeminiContent[] = [];
     
     // Add history
     if (history && Array.isArray(history)) {
-      aiContents = history.map((msg: any) => ({
+      aiContents = history.map((msg: ChatHistoryMessage) => ({
         role: msg.role === 'model' ? 'model' : 'user',
         parts: msg.parts || [{ text: msg.content || "" }]
       }));

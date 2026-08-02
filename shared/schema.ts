@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, serial, timestamp, boolean, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, serial, timestamp, boolean, integer, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -15,7 +15,9 @@ export const users = pgTable("users", {
   dempBalance: text("demp_balance").default("0").notNull(),
   lastVipVerifiedAt: timestamp("last_vip_verified_at"),
   vipVerified: boolean("vip_verified").default(false).notNull(),
-});
+}, (table) => [
+  index("users_wallet_address_idx").on(table.walletAddress),
+]);
 
 export const vipVerifications = pgTable("vip_verifications", {
   id: serial("id").primaryKey(),
@@ -24,7 +26,10 @@ export const vipVerifications = pgTable("vip_verifications", {
   tier: text("tier").notNull(),
   signatureVerified: boolean("signature_verified").default(false).notNull(),
   verifiedAt: timestamp("verified_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("vip_verifications_wallet_address_idx").on(table.walletAddress),
+  index("vip_verifications_verified_at_idx").on(table.verifiedAt),
+]);
 
 export const subscribers = pgTable("subscribers", {
   id: serial("id").primaryKey(),

@@ -1,9 +1,13 @@
-"use client";
-
+import { Metadata } from 'next';
 import { Roadmap } from "@/components/sections/Roadmap";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+
+export const metadata: Metadata = {
+  title: 'Ecosystem Roadmap | Dark Empire HQ',
+  description: 'View the official development roadmap for Dark Empire ($DEMP), spanning Genesis, Staking Vaults, AI Oracle, DAO Governance, and Dominion phases.',
+};
 
 export default function RoadmapPage() {
   return (
@@ -20,4 +24,5 @@ export default function RoadmapPage() {
     </div>
   );
 }
+
 

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
 
 // In-Memory Rate Limiter Map (Resets on cold start, but effective for immediate volumetric bursts per instance)
-const rateLimitMap = new Map<string, { count: number, timestamp: number }>();
+const rateLimitMap = new Map<string, { count: number; timestamp: number }>();
 const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
 const MAX_REQUESTS_PER_WINDOW = 10;
 
@@ -39,61 +39,63 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing or invalid token' }, { status: 401 });
     }
 
-    const token = authHeader.split('Bearer ')[1];
+    const token = authHeader.slice(7).trim();
+
+    if (!adminAuth) {
+      console.error('[HQ Webhook] Firebase Admin Auth uninitialized.');
+      return NextResponse.json({ error: 'Authentication service unavailable' }, { status: 503 });
+    }
+
     let decodedToken;
-    
     try {
-      if (adminAuth) {
-        decodedToken = await adminAuth.verifyIdToken(token);
-      } else {
-        if (process.env.NODE_ENV === "production") {
-          return NextResponse.json(
-            { error: "Authentication service unavailable" },
-            { status: 503 }
-          );
-        }
-        console.warn("Development mode: fallback token decoding used");
-        const parts = token.split('.');
-        if (parts.length < 2) {
-          return NextResponse.json({ error: 'Malformed token' }, { status: 401 });
-        }
-        const payloadStr = Buffer.from(parts[1], 'base64').toString();
-        const decoded = JSON.parse(payloadStr);
-        decodedToken = { uid: decoded.user_id || decoded.sub || 'dev-user' };
-      }
+      decodedToken = await adminAuth.verifyIdToken(token);
     } catch (error) {
-      console.error("Token verification failed:", error);
+      console.error('[HQ Webhook] Token verification failed:', error);
       return NextResponse.json({ error: 'Invalid authentication token' }, { status: 401 });
     }
 
     const uid = decodedToken.uid;
     const { action, botId } = await req.json();
 
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database service unavailable' }, { status: 503 });
+    }
+
     if (action === 'start') {
-      const newBotRef = adminDb 
-         ? adminDb.collection('bot_states').doc()
-         : { id: `bot_${Date.now()}` }; 
-      
+      const newBotRef = adminDb.collection('bot_states').doc();
+
       const newBot = {
         userId: uid,
-        pair: ["SOL-USDC", "BTC-USDC", "ETH-USDC", "JUP-USDC"][Math.floor(Math.random() * 4)],
+        pair: ['SOL-USDC', 'BTC-USDC', 'ETH-USDC', 'JUP-USDC'][Math.floor(Math.random() * 4)],
         status: 'active',
         pnl: 0,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
-      if (adminDb) {
-        await adminDb.collection('bot_states').doc(newBotRef.id).set(newBot);
-      } else {
-         // Should not hit this unless completely unconfigured
-         console.log("No admin DB, simbot:", newBot);
-      }
-      
+      await newBotRef.set(newBot);
+
       return NextResponse.json({ success: true, bot: { id: newBotRef.id, ...newBot } });
     } else if (action === 'stop' && botId) {
-      if (adminDb) {
-        await adminDb.collection('bot_states').doc(botId).update({ status: 'stopped' });
+      if (typeof botId !== 'string') {
+        return NextResponse.json({ error: 'Invalid botId' }, { status: 400 });
       }
+
+      const botRef = adminDb.collection('bot_states').doc(botId);
+      const botSnap = await botRef.get();
+
+      if (!botSnap.exists) {
+        return NextResponse.json({ error: 'Bot instance not found' }, { status: 404 });
+      }
+
+      if (botSnap.data()?.userId !== uid) {
+        return NextResponse.json({ error: 'Forbidden: You do not own this bot instance' }, { status: 403 });
+      }
+
+      await botRef.update({
+        status: 'stopped',
+        stoppedAt: new Date().toISOString(),
+      });
+
       return NextResponse.json({ success: true });
     }
 
