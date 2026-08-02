@@ -19,6 +19,7 @@ import { motion } from "motion/react";
 import { JupiterSwapWidget } from "@/components/JupiterSwapWidget";
 import { GeckoTerminalChart } from "@/components/GeckoTerminalChart";
 import { RealTimeTradeStream } from "@/components/RealTimeTradeStream";
+import { PortfolioAnalytics } from "@/components/PortfolioAnalytics";
 import { 
   fetchTokenTelemetry, 
   formatUsdValue, 
@@ -112,6 +113,10 @@ export default function HoldingsPage() {
           </p>
           <div className="h-0.5 w-16 bg-purple-500 mx-auto opacity-60 shadow-[0_0_10px_#a855f7]" />
         </div>
+
+        {/* WEB3 PORTFOLIO ANALYTICS DASHBOARD CARD */}
+        <PortfolioAnalytics />
+
 
         {/* LIVE $DEMP TELEMETRY METRICS GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

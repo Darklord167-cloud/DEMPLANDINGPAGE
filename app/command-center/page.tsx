@@ -1,6 +1,7 @@
 import { CommandCenter } from "@/components/sections/CommandCenter";
 import { GeckoTerminalChart } from "@/components/GeckoTerminalChart";
 import { RealTimeTradeStream } from "@/components/RealTimeTradeStream";
+import { PortfolioAnalytics } from "@/components/PortfolioAnalytics";
 import { TerminalSquare } from "lucide-react";
 
 export default function CommandCenterPage() {
@@ -36,6 +37,9 @@ export default function CommandCenterPage() {
             </span>
           </div>
         </div>
+
+        {/* Feature #4: Personal Web3 PnL & Portfolio Analytics */}
+        <PortfolioAnalytics />
         
         {/* Core Control Interactivity Matrix */}
         <div className="bg-zinc-950/40 backdrop-blur-md rounded-2xl border border-purple-500/20 p-2 shadow-xl">
@@ -56,3 +60,4 @@ export default function CommandCenterPage() {
     </div>
   );
 }
+
