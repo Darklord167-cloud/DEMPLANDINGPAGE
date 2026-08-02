@@ -1,6 +1,7 @@
 export interface VipTierDef {
   id: 'none' | 'bronze' | 'silver' | 'gold' | 'dark_lord';
   level: number;
+  levelTag: string;
   name: string;
   subtitle: string;
   minBalance: number;
@@ -14,6 +15,8 @@ export interface VipTierDef {
   discountPercentage: number;
   feeMultiplier: number;
   oracleMultiplier: number;
+  rpcClass: string;
+  govPower: string;
   perks: string[];
   description: string;
   iconName: string;
@@ -25,6 +28,7 @@ export const VIP_TIERS: Record<string, VipTierDef> = {
   none: {
     id: 'none',
     level: 0,
+    levelTag: 'LVL 0 INITIATE',
     name: 'Initiate',
     subtitle: 'Standard HQ Explorer',
     minBalance: 0,
@@ -38,6 +42,8 @@ export const VIP_TIERS: Record<string, VipTierDef> = {
     discountPercentage: 0,
     feeMultiplier: 1.0,
     oracleMultiplier: 1.0,
+    rpcClass: 'Public Shared (1x)',
+    govPower: '1.0x Weight',
     perks: [
       'Standard Dark Empire HQ access',
       'Public token analytics & chart views',
@@ -49,6 +55,7 @@ export const VIP_TIERS: Record<string, VipTierDef> = {
   bronze: {
     id: 'bronze',
     level: 1,
+    levelTag: 'LVL 1 OPERATIVE',
     name: 'Bronze Empire',
     subtitle: 'Tier 1 Operative',
     minBalance: 1000,
@@ -62,6 +69,8 @@ export const VIP_TIERS: Record<string, VipTierDef> = {
     discountPercentage: 5,
     feeMultiplier: 0.95,
     oracleMultiplier: 1.1,
+    rpcClass: 'High-Speed Relay (2x)',
+    govPower: '1.0x Weight',
     perks: [
       '5% Discount on HQ Services & AI Oracle',
       'Bronze VIP verification badge on HQ profile',
@@ -74,6 +83,7 @@ export const VIP_TIERS: Record<string, VipTierDef> = {
   silver: {
     id: 'silver',
     level: 2,
+    levelTag: 'LVL 2 COMMANDER',
     name: 'Silver Sentinel',
     subtitle: 'Tier 2 Commander',
     minBalance: 10000,
@@ -87,6 +97,8 @@ export const VIP_TIERS: Record<string, VipTierDef> = {
     discountPercentage: 15,
     feeMultiplier: 0.85,
     oracleMultiplier: 1.25,
+    rpcClass: 'Dedicated Priority (5x)',
+    govPower: '1.25x Weight',
     perks: [
       '15% Discount on all Dark Empire HQ services',
       'Silver VIP Badge & Custom Avatar Frame',
@@ -100,6 +112,7 @@ export const VIP_TIERS: Record<string, VipTierDef> = {
   gold: {
     id: 'gold',
     level: 3,
+    levelTag: 'LVL 3 ELITE',
     name: 'Gold Commander',
     subtitle: 'Tier 3 Elite',
     minBalance: 50000,
@@ -113,6 +126,8 @@ export const VIP_TIERS: Record<string, VipTierDef> = {
     discountPercentage: 30,
     feeMultiplier: 0.70,
     oracleMultiplier: 1.5,
+    rpcClass: 'Ultra Low-Latency (10x)',
+    govPower: '1.5x Weight',
     perks: [
       '30% Discount on HQ services & AI Oracle',
       '100 Free Monthly AI Oracle Credits',
@@ -126,6 +141,7 @@ export const VIP_TIERS: Record<string, VipTierDef> = {
   dark_lord: {
     id: 'dark_lord',
     level: 4,
+    levelTag: 'LVL 4 OVERLORD SUPREME',
     name: 'Dark Lord Overlord',
     subtitle: 'Tier 4 Supreme',
     minBalance: 100000,
@@ -139,6 +155,8 @@ export const VIP_TIERS: Record<string, VipTierDef> = {
     discountPercentage: 50,
     feeMultiplier: 0.50,
     oracleMultiplier: 2.0,
+    rpcClass: 'Unlimited Dedicated Node (20x)',
+    govPower: '2.0x Weight',
     perks: [
       '50% Fee Discount across all HQ services & swaps',
       '2x DAO Governance Voting Power',

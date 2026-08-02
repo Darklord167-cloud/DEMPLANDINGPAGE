@@ -26,16 +26,25 @@ import {
   Info,
   CheckCircle,
   XCircle,
-  BarChart3
+  BarChart3,
+  Award,
+  Layers,
+  Sparkle,
+  ArrowUpRight,
+  HelpCircle,
+  Compass
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
-// Imperial Ranks Mapping
+// Imperial Ranks Mapping with explicit status level indicators & rich visuals
 export interface ImperialRank {
   id: 'initiate' | 'vanguard' | 'overlord';
+  levelCode: string;
   name: 'Initiate' | 'Vanguard' | 'Overlord';
+  title: string;
   minDemp: number;
   badgeText: string;
   badgeClass: string;
@@ -43,66 +52,96 @@ export interface ImperialRank {
   accentColor: string;
   borderColor: string;
   bgGradient: string;
+  cardGlow: string;
   description: string;
-  perks: { title: string; desc: string; highlight?: string }[];
+  statusIndicator: {
+    label: string;
+    bgClass: string;
+    dotClass: string;
+  };
+  perks: { title: string; desc: string; highlight?: string; icon: React.ComponentType<{ className?: string }> }[];
   icon: React.ComponentType<{ className?: string }>;
 }
 
 export const IMPERIAL_RANKS: ImperialRank[] = [
   {
     id: 'initiate',
+    levelCode: 'LVL 0 - 9',
     name: 'Initiate',
+    title: 'HQ Initiate Explorer',
     minDemp: 0,
-    badgeText: 'INITIATE RANK',
+    badgeText: 'INITIATE • ENTRY RANK',
     badgeClass:
       'border-slate-700 bg-slate-900/90 text-slate-300 shadow-[0_0_12px_rgba(148,163,184,0.2)]',
     glowColor: 'rgba(148, 163, 184, 0.4)',
     accentColor: '#94a3b8',
     borderColor: 'border-slate-700/80',
     bgGradient: 'from-slate-950/90 via-zinc-950/80 to-slate-950/90',
-    description: 'Standard Dark Empire explorer. Connect wallet & hold $DEMP to advance on-chain rank.',
+    cardGlow: '0 0 20px rgba(148, 163, 184, 0.15)',
+    description: 'Standard Dark Empire explorer. Connect wallet & hold $DEMP to advance on-chain rank hierarchy.',
+    statusIndicator: {
+      label: 'ENTRY LEVEL',
+      bgClass: 'bg-slate-900/90 text-slate-400 border-slate-700',
+      dotClass: 'bg-slate-500',
+    },
     perks: [
-      { title: 'Standard Routing', desc: 'Access to public DEX routing engine' },
-      { title: 'Public Analytics', desc: 'Real-time chart & orderbook telemetry' },
-      { title: 'Basic Oracle Access', desc: 'Standard AI market query capabilities' },
+      { title: 'Standard Routing', desc: 'Public Solana DEX swap routing engine', icon: Compass },
+      { title: 'Public Telemetry', desc: 'Real-time chart & market telemetry', icon: BarChart3 },
+      { title: 'Basic Oracle Access', desc: 'Standard AI market query capabilities', icon: Shield },
     ],
     icon: Shield,
   },
   {
     id: 'vanguard',
+    levelCode: 'LVL 10 - 49',
     name: 'Vanguard',
+    title: 'Vanguard Tactical Operative',
     minDemp: 1000,
-    badgeText: 'VANGUARD RANK',
+    badgeText: 'VANGUARD • TIER 1 OPERATIVE',
     badgeClass:
       'border-amber-500/70 bg-gradient-to-r from-amber-950/90 via-yellow-950/70 to-amber-950/90 text-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.4)]',
     glowColor: 'rgba(245, 158, 11, 0.6)',
     accentColor: '#f59e0b',
     borderColor: 'border-amber-500/60',
     bgGradient: 'from-amber-950/80 via-yellow-950/40 to-amber-950/80',
+    cardGlow: '0 0 30px rgba(245, 158, 11, 0.3)',
     description: 'Elite HQ Operative. Requires 1,000+ $DEMP for service fee discounts & priority Solana RPC nodes.',
+    statusIndicator: {
+      label: 'TACTICAL OPERATIVE',
+      bgClass: 'bg-amber-950/90 text-amber-300 border-amber-500/50',
+      dotClass: 'bg-amber-400 animate-ping',
+    },
     perks: [
-      { title: '5%-15% Fee Discounts', desc: 'Applies automatically across all HQ services', highlight: '5-15% OFF' },
-      { title: 'Priority Solana RPC', desc: 'High-speed dedicated transaction relay endpoints', highlight: 'PRIORITY' },
-      { title: 'VIP Discord Lounge', desc: 'Access to verified holder discussion channels', highlight: 'PRIVATE' },
+      { title: '5%-15% Service Fee Waiver', desc: 'Applies automatically across all HQ services & AI queries', highlight: '5-15% OFF', icon: Coins },
+      { title: 'Priority Solana RPC Nodes', desc: 'High-speed dedicated transaction relay endpoints', highlight: 'PRIORITY', icon: Zap },
+      { title: 'VIP Discord Lounge', desc: 'Access to verified holder discussion channels & alpha', highlight: 'PRIVATE', icon: Swords },
     ],
     icon: Swords,
   },
   {
     id: 'overlord',
+    levelCode: 'LVL 50+ SUPREME',
     name: 'Overlord',
+    title: 'Overlord Supreme Commander',
     minDemp: 50000,
-    badgeText: 'OVERLORD SUPREME',
+    badgeText: 'OVERLORD • SUPREME COMMANDER',
     badgeClass:
       'border-purple-400/80 bg-gradient-to-r from-purple-950/90 via-amber-950/50 to-purple-950/90 text-purple-200 shadow-[0_0_25px_rgba(168,85,247,0.5)]',
     glowColor: 'rgba(168, 85, 247, 0.7)',
     accentColor: '#c084fc',
     borderColor: 'border-purple-500/80',
     bgGradient: 'from-purple-950/90 via-violet-950/60 to-purple-950/90',
+    cardGlow: '0 0 40px rgba(168, 85, 247, 0.45)',
     description: 'Supreme Commander tier. Hold 50,000+ $DEMP for maximum fee waivers & unlimited AI Oracle power.',
+    statusIndicator: {
+      label: 'SUPREME COMMAND',
+      bgClass: 'bg-purple-950/90 text-purple-200 border-purple-400/80 shadow-[0_0_15px_rgba(168,85,247,0.4)]',
+      dotClass: 'bg-purple-400 animate-pulse',
+    },
     perks: [
-      { title: '30%-50% HQ Fee Waiver', desc: 'Maximum service discount tier in HQ ecosystem', highlight: '30-50% OFF' },
-      { title: 'Unlimited AI Oracle', desc: 'Zero rate-limit access with priority GPU allocation', highlight: 'UNLIMITED' },
-      { title: '2x DAO Governance Power', desc: 'Double voting weight on all ecosystem proposals', highlight: '2X POWER' },
+      { title: '30%-50% HQ Fee Waiver', desc: 'Maximum service discount tier in HQ ecosystem', highlight: '30-50% OFF', icon: Award },
+      { title: 'Unlimited AI Oracle GPU', desc: 'Zero rate-limit access with priority GPU allocation', highlight: 'UNLIMITED', icon: Flame },
+      { title: '2x DAO Governance Power', desc: 'Double voting weight on all ecosystem proposals', highlight: '2X VOTE POWER', icon: Crown },
     ],
     icon: Crown,
   },
@@ -123,7 +162,6 @@ export function VipTierCard() {
   const [selectedRankTab, setSelectedRankTab] = useState<'initiate' | 'vanguard' | 'overlord'>('vanguard');
   const [isSimulatorActive, setIsSimulatorActive] = useState(false);
   const [simulatedBalance, setSimulatedBalance] = useState<number>(10000);
-  const [showComparisonMode, setShowComparisonMode] = useState(false);
 
   // Active balance (real or simulated)
   const dempBalance = isSimulatorActive ? simulatedBalance : actualDempBalance;
@@ -325,20 +363,27 @@ export function VipTierCard() {
           </div>
         </div>
 
-        {/* Imperial Rank Progression Map Section */}
-        <div className="p-6 md:p-8 rounded-3xl bg-gradient-to-b from-zinc-950/95 via-[#0c0a15] to-zinc-950/95 border border-purple-900/70 space-y-6 relative overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.9)]">
+        {/* ==================================================================== */}
+        {/* IMPERIAL RANK PROGRESSION SECTION (ENHANCED VISUAL HIERARCHY & DYNAMICS) */}
+        {/* ==================================================================== */}
+        <div className="p-6 md:p-8 rounded-3xl bg-gradient-to-b from-zinc-950/95 via-[#0d0918] to-zinc-950/95 border border-purple-900/70 space-y-6 relative overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.9)]">
           {/* Section Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-purple-900/40 pb-5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-center text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-                <Trophy className="w-5 h-5 animate-bounce" />
+              <div className="w-11 h-11 rounded-2xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-center text-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.3)]">
+                <Trophy className="w-6 h-6 animate-bounce text-amber-400" />
               </div>
               <div>
-                <h3 className="text-xl font-display font-black text-white uppercase tracking-wider text-glow flex items-center gap-2">
-                  IMPERIAL RANK PROGRESSION
-                </h3>
-                <p className="text-xs font-mono text-zinc-400">
-                  On-Chain Imperial Rank Hierarchy & Privilege Acceleration
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl md:text-2xl font-display font-black text-white uppercase tracking-wider text-glow">
+                    IMPERIAL RANK PROGRESSION
+                  </h3>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase">
+                    ON-CHAIN PROTOCOL
+                  </span>
+                </div>
+                <p className="text-xs font-mono text-zinc-400 mt-0.5">
+                  On-Chain Rank Hierarchy, Status Indicators & Privilege Acceleration
                 </p>
               </div>
             </div>
@@ -355,13 +400,13 @@ export function VipTierCard() {
                     : 'border-zinc-800 text-zinc-400 hover:text-white hover:border-purple-500/40'
                 }`}
               >
-                <SlidersHorizontal className="w-3.5 h-3.5" />
+                <SlidersHorizontal className="w-3.5 h-3.5 text-amber-400" />
                 <span>{isSimulatorActive ? 'Exit Simulator' : 'Test Rank Simulator'}</span>
               </Button>
 
               {nextImperialRank ? (
                 <div className="flex items-center gap-2 bg-amber-950/80 border border-amber-500/50 px-3.5 py-1.5 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                  <span className="text-xs font-mono text-zinc-300">Next Target:</span>
+                  <span className="text-xs font-mono text-zinc-300">Target Rank:</span>
                   <span className="text-xs font-mono font-extrabold text-amber-400">
                     {nextRankProgress.toFixed(1)}% to {nextImperialRank.name}
                   </span>
@@ -381,41 +426,46 @@ export function VipTierCard() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="p-4 rounded-2xl bg-purple-950/30 border border-purple-500/40 space-y-3"
+                className="p-5 rounded-2xl bg-purple-950/40 border border-purple-500/50 space-y-4 shadow-xl"
               >
-                <div className="flex items-center justify-between text-xs font-mono">
+                <div className="flex items-center justify-between text-xs font-mono flex-wrap gap-2">
                   <span className="text-purple-300 font-bold flex items-center gap-1.5">
-                    <SlidersHorizontal className="w-3.5 h-3.5 text-amber-400" />
+                    <SlidersHorizontal className="w-4 h-4 text-amber-400" />
                     Interactive Imperial Rank Balance Simulator
                   </span>
-                  <span className="text-amber-400 font-bold">
-                    Simulated Balance: {simulatedBalance.toLocaleString()} $DEMP
-                  </span>
+                  <div className="flex items-center gap-2 bg-black/60 px-3 py-1 rounded-xl border border-purple-500/30">
+                    <span className="text-zinc-400">Simulated Balance:</span>
+                    <span className="text-amber-400 font-extrabold text-sm">
+                      {simulatedBalance.toLocaleString()} $DEMP
+                    </span>
+                  </div>
                 </div>
                 <input
                   type="range"
                   min="0"
                   max="100000"
-                  step="1000"
+                  step="500"
                   value={simulatedBalance}
                   onChange={(e) => setSimulatedBalance(Number(e.target.value))}
-                  className="w-full h-2.5 bg-zinc-900 rounded-lg appearance-none cursor-pointer accent-amber-400 border border-zinc-700"
+                  className="w-full h-3 bg-zinc-900 rounded-lg appearance-none cursor-pointer accent-amber-400 border border-purple-900/60"
                 />
-                <div className="flex flex-wrap gap-2 text-[11px] font-mono">
-                  <span className="text-zinc-400">Presets:</span>
-                  {[0, 1000, 10000, 50000, 100000].map((val) => (
-                    <button
-                      key={val}
-                      onClick={() => setSimulatedBalance(val)}
-                      className={`px-2.5 py-0.5 rounded border transition-colors ${
-                        simulatedBalance === val
-                          ? 'bg-amber-500 text-black font-bold border-amber-400'
-                          : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'
-                      }`}
-                    >
-                      {val === 0 ? '0 $DEMP' : `${(val / 1000).toFixed(0)}k $DEMP`}
-                    </button>
-                  ))}
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+                  <span className="text-zinc-400">Quick Test Milestones:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {[0, 1000, 5000, 10000, 50000, 100000].map((val) => (
+                      <button
+                        key={val}
+                        onClick={() => setSimulatedBalance(val)}
+                        className={`px-3 py-1 rounded-xl border transition-all cursor-pointer font-bold ${
+                          simulatedBalance === val
+                            ? 'bg-amber-500 text-black border-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.5)]'
+                            : 'bg-zinc-900/90 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700'
+                        }`}
+                      >
+                        {val === 0 ? 'Free (0)' : `${(val / 1000).toFixed(0)}k $DEMP`}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -424,7 +474,7 @@ export function VipTierCard() {
           {/* Gamified Animated Progression Track */}
           <div className="relative pt-6 pb-2">
             {/* Visual Milestones Connector Line with Segment Labels */}
-            <div className="relative h-6 w-full bg-zinc-900/90 rounded-full border border-zinc-800 overflow-hidden p-0.5 shadow-inner">
+            <div className="relative h-7 w-full bg-zinc-900/90 rounded-full border border-zinc-800 overflow-hidden p-0.5 shadow-inner">
               <motion.div
                 className="h-full rounded-full bg-gradient-to-r from-slate-500 via-amber-500 via-50% to-purple-500 relative"
                 initial={{ width: '0%' }}
@@ -434,19 +484,25 @@ export function VipTierCard() {
                 {/* Shimmering Beam Effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-pulse" />
                 {/* Pulsing Front Pin */}
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-4 h-4 rounded-full bg-amber-300 border-2 border-white shadow-[0_0_20px_#fbbf24] animate-ping" />
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-5 h-5 rounded-full bg-amber-300 border-2 border-white shadow-[0_0_20px_#fbbf24] animate-ping" />
               </motion.div>
             </div>
 
             {/* Threshold Labels along Track */}
-            <div className="flex justify-between text-[11px] font-mono text-zinc-500 px-1 mt-1.5">
-              <span>0 $DEMP (Initiate)</span>
-              <span>1,000 $DEMP (Vanguard)</span>
-              <span>50,000 $DEMP (Overlord)</span>
+            <div className="flex justify-between text-[11px] font-mono text-zinc-400 px-1 mt-2 font-semibold">
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-slate-500" /> 0 $DEMP (Initiate)
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-amber-400" /> 1,000 $DEMP (Vanguard)
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-purple-400" /> 50,000 $DEMP (Overlord)
+              </span>
             </div>
 
-            {/* Imperial Rank Milestone Status Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+            {/* Imperial Rank Milestone Status Cards (Enhanced Visual Hierarchy) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-6">
               {IMPERIAL_RANKS.map((rank) => {
                 const isAchieved = dempBalance >= rank.minDemp;
                 const isCurrent = currentImperialRank.id === rank.id;
@@ -460,77 +516,97 @@ export function VipTierCard() {
 
                 if (isCurrent) {
                   statusBadgeText = 'ACTIVE RANK';
-                  statusBadgeClass = 'bg-purple-600 text-white border-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.5)]';
+                  statusBadgeClass = 'bg-purple-600 text-white border-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.6)] font-black';
                   indicatorDot = 'bg-white animate-ping';
                 } else if (isAchieved) {
                   statusBadgeText = 'UNLOCKED';
-                  statusBadgeClass = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40';
+                  statusBadgeClass = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 font-bold';
                   indicatorDot = 'bg-emerald-400';
                 } else if (nextImperialRank?.id === rank.id) {
                   statusBadgeText = 'NEXT TARGET';
-                  statusBadgeClass = 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse';
+                  statusBadgeClass = 'bg-amber-500/20 text-amber-300 border-amber-500/50 animate-pulse font-bold';
                   indicatorDot = 'bg-amber-400 animate-ping';
                 }
 
                 return (
                   <motion.div
                     key={rank.id}
-                    whileHover={{ scale: 1.03, y: -3 }}
+                    whileHover={{ scale: 1.03, y: -4 }}
                     onClick={() => setSelectedRankTab(rank.id)}
-                    className={`cursor-pointer p-5 rounded-2xl border transition-all duration-300 flex flex-col justify-between space-y-4 relative overflow-hidden group ${
+                    className={`cursor-pointer p-6 rounded-3xl border transition-all duration-300 flex flex-col justify-between space-y-5 relative overflow-hidden group shadow-lg ${
                       isCurrent
-                        ? 'border-2 border-purple-500 bg-purple-950/60 shadow-[0_0_30px_rgba(168,85,247,0.35)]'
+                        ? 'border-2 border-purple-500 bg-gradient-to-b from-purple-950/80 via-[#130b24] to-zinc-950 shadow-[0_0_35px_rgba(168,85,247,0.4)] scale-[1.02]'
                         : isSelected
-                        ? 'border-2 border-amber-500/80 bg-zinc-900/90 shadow-[0_0_20px_rgba(245,158,11,0.25)]'
+                        ? 'border-2 border-amber-500/80 bg-zinc-900/90 shadow-[0_0_25px_rgba(245,158,11,0.3)]'
                         : isAchieved
                         ? 'border-amber-500/40 bg-zinc-950/90 hover:border-amber-400/80'
-                        : 'border-zinc-800/80 bg-zinc-950/80 opacity-70 hover:opacity-100'
+                        : 'border-zinc-800/80 bg-zinc-950/80 opacity-75 hover:opacity-100'
                     }`}
+                    style={{
+                      boxShadow: isCurrent ? rank.cardGlow : undefined,
+                    }}
                   >
-                    {/* Top Row: Icon + Status Pill */}
-                    <div className="flex items-center justify-between">
-                      <div
-                        className={`p-2.5 rounded-xl border transition-transform group-hover:scale-110 ${
-                          isAchieved
-                            ? 'bg-amber-500/20 text-amber-400 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
-                            : 'bg-zinc-800 text-zinc-500 border-zinc-700'
-                        }`}
-                      >
-                        <RankNodeIcon className="w-5 h-5" />
-                      </div>
-
+                    {/* Level Code Tag Header */}
+                    <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
+                      <span className="text-[10px] font-mono font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-black/80 border border-zinc-700 text-zinc-300">
+                        {rank.levelCode}
+                      </span>
                       <span
-                        className={`inline-flex items-center gap-1.5 text-[10px] font-mono font-extrabold uppercase px-2.5 py-1 rounded-full border ${statusBadgeClass}`}
+                        className={`inline-flex items-center gap-1.5 text-[10px] font-mono uppercase px-3 py-1 rounded-full border ${statusBadgeClass}`}
                       >
                         <span className={`w-1.5 h-1.5 rounded-full ${indicatorDot}`} />
                         <span>{statusBadgeText}</span>
                       </span>
                     </div>
 
-                    {/* Rank Name & Threshold */}
-                    <div>
-                      <div className="text-base font-display font-black text-white flex items-center gap-2">
-                        <span>{rank.name}</span>
-                        {isCurrent && <Crown className="w-4 h-4 text-amber-400 inline" />}
+                    {/* Rank Icon + Title */}
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={`p-3.5 rounded-2xl border transition-transform group-hover:scale-110 shrink-0 ${
+                          isAchieved
+                            ? 'bg-amber-500/20 text-amber-400 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                            : 'bg-zinc-800 text-zinc-500 border-zinc-700'
+                        }`}
+                      >
+                        <RankNodeIcon className="w-7 h-7" />
                       </div>
-                      <div className="text-xs font-mono text-amber-400/90 mt-1 font-semibold">
-                        {rank.minDemp === 0 ? '0 $DEMP (Entry Level)' : `${rank.minDemp.toLocaleString()}+ $DEMP`}
+
+                      <div>
+                        <div className="text-xl font-display font-black text-white flex items-center gap-2">
+                          <span>{rank.name}</span>
+                          {isCurrent && <Crown className="w-4 h-4 text-amber-400 inline" />}
+                        </div>
+                        <div className="text-xs font-mono text-amber-400/90 font-bold mt-0.5">
+                          {rank.minDemp === 0 ? '0 $DEMP (Entry)' : `${rank.minDemp.toLocaleString()}+ $DEMP`}
+                        </div>
                       </div>
                     </div>
 
+                    {/* Rank Description */}
+                    <p className="text-xs text-zinc-400 font-mono leading-relaxed">
+                      {rank.description}
+                    </p>
+
                     {/* Quick Perk Highlights */}
-                    <div className="text-[11px] font-mono text-zinc-400 border-t border-zinc-800/70 pt-2 space-y-1">
-                      {rank.perks.slice(0, 2).map((p, idx) => (
-                        <div key={idx} className="flex items-center gap-1.5 truncate">
-                          <ChevronRight className="w-3 h-3 text-purple-400 shrink-0" />
-                          <span className="truncate">{p.title}</span>
+                    <div className="text-[11px] font-mono text-zinc-300 border-t border-zinc-800/80 pt-3 space-y-1.5">
+                      {rank.perks.map((p, idx) => (
+                        <div key={idx} className="flex items-center justify-between">
+                          <span className="flex items-center gap-1.5 truncate">
+                            <ChevronRight className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                            <span className="truncate">{p.title}</span>
+                          </span>
+                          {p.highlight && (
+                            <span className="text-[9px] font-extrabold px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800 shrink-0">
+                              {p.highlight}
+                            </span>
+                          )}
                         </div>
                       ))}
                     </div>
 
-                    {/* Selection Indicator bar */}
+                    {/* Active/Selected indicator bar */}
                     {isSelected && (
-                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-purple-500" />
+                      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-400 via-purple-500 to-amber-400 animate-pulse" />
                     )}
                   </motion.div>
                 );
@@ -540,41 +616,60 @@ export function VipTierCard() {
 
           {/* Dynamic Shortfall Banner or Max Rank Celebration */}
           {nextImperialRank ? (
-            <div className="p-4 rounded-xl bg-gradient-to-r from-purple-950/60 via-amber-950/30 to-zinc-950/80 border border-amber-500/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono shadow-md">
-              <div className="flex items-center gap-2.5 text-zinc-200">
-                <TrendingUp className="w-4 h-4 text-amber-400 shrink-0" />
-                <span>
-                  Hold <strong className="text-amber-400 font-bold">{remainingDemp.toLocaleString()}</strong> more $DEMP to achieve <strong className="text-white font-bold">{nextImperialRank.name}</strong> rank privileges!
-                </span>
+            <div className="p-5 rounded-2xl bg-gradient-to-r from-purple-950/70 via-amber-950/40 to-zinc-950/90 border border-amber-500/50 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono shadow-xl">
+              <div className="flex items-center gap-3 text-zinc-200">
+                <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40 shrink-0">
+                  <TrendingUp className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <span className="text-sm font-bold text-white block">
+                    Rank Advancement Opportunity
+                  </span>
+                  <span className="text-zinc-300">
+                    Hold <strong className="text-amber-400 font-extrabold">{remainingDemp.toLocaleString()}</strong> more $DEMP to advance to <strong className="text-white font-black">{nextImperialRank.name}</strong> rank privileges!
+                  </span>
+                </div>
               </div>
-              <span className="text-purple-300 font-bold shrink-0 bg-purple-950/80 px-3 py-1 rounded-lg border border-purple-800/50">
-                Progress: {dempBalance.toLocaleString()} / {nextImperialRank.minDemp.toLocaleString()} $DEMP
-              </span>
+
+              <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto justify-between sm:justify-end">
+                <span className="text-purple-300 font-mono font-bold text-xs bg-purple-950/90 px-3.5 py-1.5 rounded-xl border border-purple-800/60">
+                  {dempBalance.toLocaleString()} / {nextImperialRank.minDemp.toLocaleString()} $DEMP
+                </span>
+
+                <Button asChild size="sm" className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-mono text-xs font-black rounded-xl shadow-[0_0_15px_rgba(245,158,11,0.4)]">
+                  <Link href="#token">
+                    <span>SWAP $DEMP NOW</span>
+                    <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                  </Link>
+                </Button>
+              </div>
             </div>
           ) : (
-            <div className="p-4 rounded-xl bg-gradient-to-r from-purple-950/90 via-purple-900/50 to-amber-950/90 border border-purple-500/70 text-center text-xs font-mono text-purple-200 font-black tracking-wide text-glow shadow-[0_0_25px_rgba(168,85,247,0.3)]">
+            <div className="p-5 rounded-2xl bg-gradient-to-r from-purple-950/90 via-purple-900/60 to-amber-950/90 border border-purple-500/80 text-center text-xs font-mono text-purple-200 font-black tracking-wider text-glow shadow-[0_0_30px_rgba(168,85,247,0.4)]">
               ★ CONGRATULATIONS! OVERLORD SUPREME COMMAND ACTIVE ACROSS ALL DARK EMPIRE HQ SYSTEM PROTOCOLS ★
             </div>
           )}
         </div>
 
-        {/* Imperial Rank Privileges Tab Showcase */}
+        {/* Imperial Rank Privileges Deep Inspection Tab Showcase */}
         <div className="p-6 rounded-3xl bg-zinc-950/90 border border-zinc-800/90 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800/80 pb-4">
-            <div className="flex items-center gap-2.5">
-              <Zap className="w-5 h-5 text-amber-400" />
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-purple-950/80 border border-purple-500/50 text-purple-300">
+                <Zap className="w-5 h-5 text-amber-400" />
+              </div>
               <div>
-                <h4 className="text-base font-display font-bold text-white uppercase tracking-wider">
+                <h4 className="text-lg font-display font-black text-white uppercase tracking-wider">
                   Imperial Rank Privileges Inspection
                 </h4>
                 <p className="text-xs font-mono text-zinc-400">
-                  Detailed privilege breakdown for each status level
+                  Select a status level tab to inspect detailed privileges & requirements
                 </p>
               </div>
             </div>
 
             {/* Rank Selection Tabs */}
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
               {IMPERIAL_RANKS.map((r) => {
                 const isSelected = selectedRankTab === r.id;
                 const isAchieved = dempBalance >= r.minDemp;
@@ -582,14 +677,14 @@ export function VipTierCard() {
                   <button
                     key={r.id}
                     onClick={() => setSelectedRankTab(r.id)}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-mono transition-all font-bold cursor-pointer flex items-center gap-1.5 ${
+                    className={`px-4 py-2 rounded-xl text-xs font-mono transition-all font-bold cursor-pointer flex items-center gap-2 ${
                       isSelected
-                        ? 'bg-purple-900/80 text-purple-200 border border-purple-500 shadow-[0_0_12px_rgba(168,85,247,0.3)]'
+                        ? 'bg-purple-900/90 text-purple-200 border-2 border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.4)]'
                         : 'text-zinc-400 hover:text-white bg-zinc-900/80 border border-zinc-800'
                     }`}
                   >
-                    <span className={`w-2 h-2 rounded-full ${isAchieved ? 'bg-emerald-400' : 'bg-zinc-600'}`} />
-                    <span>{r.name}</span>
+                    <span className={`w-2 h-2 rounded-full ${isAchieved ? 'bg-emerald-400 animate-ping' : 'bg-zinc-600'}`} />
+                    <span>{r.name} ({r.levelCode.split(' ')[0]})</span>
                   </button>
                 );
               })}
@@ -604,51 +699,62 @@ export function VipTierCard() {
 
             return (
               <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-xl bg-purple-950/80 border border-purple-500/40 text-purple-300">
-                      <RankIcon className="w-6 h-6" />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3.5 rounded-2xl bg-purple-950/90 border border-purple-500/50 text-purple-300 shadow-lg">
+                      <RankIcon className="w-7 h-7" />
                     </div>
                     <div>
-                      <h5 className="text-lg font-display font-bold text-white flex items-center gap-2">
-                        {activeRank.name} Privilege Tier
-                      </h5>
-                      <p className="text-xs font-mono text-zinc-400">{activeRank.description}</p>
+                      <div className="flex items-center gap-2">
+                        <h5 className="text-xl font-display font-black text-white">
+                          {activeRank.name} Privilege Matrix
+                        </h5>
+                        <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-800 uppercase">
+                          {activeRank.levelCode}
+                        </span>
+                      </div>
+                      <p className="text-xs font-mono text-zinc-300 mt-1">{activeRank.description}</p>
                     </div>
                   </div>
 
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase ${
+                  <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-mono font-black uppercase ${
                     isAchieved
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
                       : 'bg-zinc-900 text-zinc-500 border border-zinc-800'
                   }`}>
                     {isAchieved ? <CheckCircle className="w-4 h-4 text-emerald-400" /> : <Lock className="w-4 h-4 text-zinc-500" />}
-                    <span>{isAchieved ? 'UNLOCKED BY YOU' : 'REQUIRES ' + activeRank.minDemp.toLocaleString() + ' $DEMP'}</span>
+                    <span>{isAchieved ? 'UNLOCKED BY YOUR WALLET' : 'REQUIRES ' + activeRank.minDemp.toLocaleString() + ' $DEMP'}</span>
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {activeRank.perks.map((perk, i) => (
-                    <div
-                      key={i}
-                      className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800 hover:border-purple-500/50 transition-all duration-300 flex flex-col justify-between space-y-2 group"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-mono font-bold text-white flex items-center gap-1.5">
+                  {activeRank.perks.map((perk, i) => {
+                    const PerkIcon = perk.icon || Shield;
+                    return (
+                      <div
+                        key={i}
+                        className="p-5 rounded-2xl bg-zinc-900/90 border border-zinc-800 hover:border-purple-500/50 transition-all duration-300 flex flex-col justify-between space-y-3 group shadow-md"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="p-2 rounded-xl bg-zinc-800/80 border border-zinc-700 text-purple-400 group-hover:scale-110 transition-transform">
+                            <PerkIcon className="w-4 h-4" />
+                          </div>
+                          {perk.highlight && (
+                            <span className="text-[10px] font-mono font-extrabold px-2.5 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800">
+                              {perk.highlight}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-sm font-mono font-bold text-white flex items-center gap-1.5 pt-1">
                           <ChevronRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform" />
                           {perk.title}
                         </span>
-                        {perk.highlight && (
-                          <span className="text-[10px] font-mono font-extrabold px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800">
-                            {perk.highlight}
-                          </span>
-                        )}
+                        <p className="text-xs text-zinc-400 font-mono leading-relaxed">
+                          {perk.desc}
+                        </p>
                       </div>
-                      <p className="text-xs text-zinc-400 font-mono leading-relaxed">
-                        {perk.desc}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             );
