@@ -28,19 +28,23 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://darkempirelords.com'),
-  title: 'Dark Empire HQ',
-  description: 'Official Headquarters of Dark Empire Lords LLC. $DEMP Token Verification, Products, and Services.',
+  title: {
+    template: '%s | Dark Empire Command',
+    default: 'Dark Empire Command Center',
+  },
+  description: "The Central Command for Dark Empire's Digital Sovereignty. Live $DEMP token tracking, whale alerts, and Web3 portfolio analytics.",
   manifest: '/manifest.json',
   openGraph: {
-    title: 'Dark Empire HQ',
-    description: 'Official Headquarters of Dark Empire Lords LLC. $DEMP Token Verification, Products, and Services.',
+    title: 'Dark Empire Command Center',
+    description: "The Central Command for Dark Empire's Digital Sovereignty. Live $DEMP token tracking, whale alerts, and Web3 portfolio analytics.",
+    siteName: 'Dark Empire Command Center',
     type: 'website',
     images: ['/assets/demp-banner.svg'],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Dark Empire HQ',
-    description: 'Official Headquarters of Dark Empire Lords LLC. $DEMP Token Verification, Products, and Services.',
+    title: 'Dark Empire Command Center',
+    description: "The Central Command for Dark Empire's Digital Sovereignty. Live $DEMP token tracking, whale alerts, and Web3 portfolio analytics.",
     images: ['/assets/demp-banner.svg'],
   },
   icons: {
