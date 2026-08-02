@@ -87,10 +87,21 @@ function TypewriterText({
   return <span>{displayedContent}{isTyping && <span className="opacity-80 animate-pulse text-[#ff6600]">▋</span>}</span>;
 }
 
+import { 
+  fetchTokenTelemetry, 
+  getJupiterSwapUrl, 
+  calculateHoldingValueUsd,
+  formatUsdValue, 
+  DEFAULT_TELEMETRY,
+  type TokenTelemetry 
+} from "@/lib/solana";
+import { ArrowLeftRight, TrendingUp } from "lucide-react";
+
 export default function OraclePage() {
   const { publicKey, connected, signMessage } = useWallet();
-  const { tier } = useVipTier();
+  const { tier, dempBalance } = useVipTier();
   const [profile, setProfile] = useState<any>(null);
+  const [telemetry, setTelemetry] = useState<TokenTelemetry>(DEFAULT_TELEMETRY);
   const [messages, setMessages] = useState<{ role: "user" | "oracle"; content: string }[]>([
     { role: "oracle", content: "ULTRON MIND CORE ONLINE. Quantum neural links calibrated. State your command, Lord." },
   ]);
@@ -99,6 +110,18 @@ export default function OraclePage() {
   const [isOracleSpeaking, setIsOracleSpeaking] = useState(false);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    async function loadTelemetry() {
+      try {
+        const stats = await fetchTokenTelemetry();
+        setTelemetry(stats);
+      } catch (e) {
+        console.error("Oracle telemetry load error", e);
+      }
+    }
+    loadTelemetry();
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -269,7 +292,7 @@ export default function OraclePage() {
 
       {/* Title Area */}
       <div className="absolute top-24 z-20 flex flex-col items-center">
-        <div className="flex items-center gap-3 mb-2">
+        <div className="flex items-center gap-3 mb-2 flex-wrap justify-center">
           {connected && profile && (
             <Link href="/credits">
               <motion.div 
@@ -281,6 +304,24 @@ export default function OraclePage() {
               </motion.div>
             </Link>
           )}
+
+          {/* Live DEX Telemetry HUD Pill */}
+          <div className="flex items-center gap-2 bg-[#041635]/90 border border-[#00d2ff]/40 px-3.5 py-1.5 rounded-full font-mono text-xs text-white backdrop-blur-md shadow-[0_0_15px_rgba(0,210,255,0.2)]">
+            <TrendingUp className="w-3.5 h-3.5 text-[#00d2ff]" />
+            <span>$DEMP ${telemetry.priceUsd.toFixed(4)}</span>
+            <span className="text-[#00d2ff] font-bold">MCAP {formatUsdValue(telemetry.marketCapUsd)}</span>
+          </div>
+
+          <a
+            href={getJupiterSwapUrl()}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1.5 bg-[#ff5500]/20 border border-[#ff6600]/60 hover:bg-[#ff5500]/40 px-3.5 py-1.5 rounded-full font-mono text-xs font-bold text-amber-300 transition-all shadow-[0_0_15px_rgba(255,102,0,0.3)]"
+          >
+            <ArrowLeftRight className="w-3.5 h-3.5 text-[#ff6600]" />
+            <span>SWAP $DEMP</span>
+          </a>
+
           <Link href="/vip">
             <VipBadge tier={tier} size="sm" showIcon />
           </Link>

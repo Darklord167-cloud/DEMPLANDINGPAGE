@@ -12,20 +12,20 @@ export const metadata: Metadata = {
 
 export default function VipPage() {
   return (
-    <div className="min-h-screen bg-black text-white relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
-      {/* Glow Effects background */}
-      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-primary/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-96 h-96 bg-purple-900/10 rounded-full blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-[#09090b] text-white relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
+      {/* Ambient Gold & Purple Highlights */}
+      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-purple-900/15 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-96 h-96 bg-amber-500/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto space-y-12 relative z-10">
         {/* Page Hero Header */}
         <div className="text-center space-y-4 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary font-mono text-xs font-semibold uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-purple-950/60 border border-purple-500/30 text-purple-300 font-mono text-xs font-semibold uppercase tracking-wider backdrop-blur-md shadow-lg shadow-purple-950/20">
+            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
             OFFICIAL DARK EMPIRE HQ PROTOCOL
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-extrabold tracking-tight text-white">
-            TIERED VIP <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-amber-400 to-purple-400">HUB</span>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-extrabold tracking-wider text-white">
+            TIERED VIP <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-amber-400 to-purple-400">HUB</span>
           </h1>
           <p className="text-zinc-400 font-mono text-sm sm:text-base leading-relaxed">
             Verify your $DEMP token balance with server-side Solana RPC nodes to securely claim your VIP tier, unlock fee discounts, priority RPC routing, and AI Oracle power.
@@ -34,8 +34,8 @@ export default function VipPage() {
 
         {/* User VIP Profile Dashboard Card */}
         <section className="space-y-4">
-          <div className="flex items-center gap-2 text-xs font-mono text-zinc-400 uppercase tracking-widest">
-            <ShieldCheck className="w-4 h-4 text-primary" />
+          <div className="flex items-center gap-2 text-xs font-mono text-zinc-400 uppercase tracking-wider font-semibold">
+            <ShieldCheck className="w-4 h-4 text-purple-400" />
             YOUR VERIFIED VIP STATUS
           </div>
           <VipTierCard />
@@ -52,9 +52,9 @@ export default function VipPage() {
         </section>
 
         {/* Quick Swap & Top-Up Section */}
-        <section className="pt-8 border-t border-zinc-800/80 space-y-8">
+        <section className="pt-8 border-t border-purple-500/20 space-y-8">
           <div className="text-center space-y-2 max-w-xl mx-auto">
-            <h3 className="text-2xl font-display font-bold text-white flex items-center justify-center gap-2">
+            <h3 className="text-2xl font-display font-bold text-white tracking-wider flex items-center justify-center gap-2">
               UPGRADE YOUR VIP TIER
             </h3>
             <p className="text-xs text-zinc-400 font-mono">
