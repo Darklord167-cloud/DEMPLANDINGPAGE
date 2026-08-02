@@ -59,7 +59,7 @@ export function MarketTelemetry({
   const [copied, setCopied] = useState(false);
 
   // Embed URLs
-  const geckoEmbedSrc = `https://www.geckoterminal.com/solana/pools/${POOL_ADDRESS}?embed=1&info=0&swaps=0`;
+  const geckoEmbedSrc = `https://www.geckoterminal.com/solana/pools/${POOL_ADDRESS}?embed=1&info=1&swaps=1&grayscale=0&light_chart=0&chart_type=price&resolution=15m`;
   const dexScreenerEmbedSrc = `https://dexscreener.com/solana/${POOL_ADDRESS}?embed=1&theme=dark`;
   const currentIframeSrc = activeEngine === "gecko" ? geckoEmbedSrc : dexScreenerEmbedSrc;
 
@@ -258,8 +258,9 @@ export function MarketTelemetry({
 
           <iframe
             key={`${key}-${activeEngine}`}
+            id={activeEngine === "gecko" ? "geckoterminal-embed" : "dexscreener-embed"}
             src={currentIframeSrc}
-            title={activeEngine === "gecko" ? "$DEMP GeckoTerminal Live Chart" : "$DEMP DexScreener Live Chart"}
+            title={activeEngine === "gecko" ? "Embed DEMP / USDC" : "$DEMP DexScreener Live Chart"}
             className="w-full h-full border-0 relative z-0"
             allow="clipboard-write"
             allowFullScreen
