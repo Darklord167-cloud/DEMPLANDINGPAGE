@@ -2,6 +2,7 @@ import { CommandCenter } from "@/components/sections/CommandCenter";
 import { GeckoTerminalChart } from "@/components/GeckoTerminalChart";
 import { RealTimeTradeStream } from "@/components/RealTimeTradeStream";
 import { PortfolioAnalytics } from "@/components/PortfolioAnalytics";
+import { TokenomicsVisualizer } from "@/components/TokenomicsVisualizer";
 import { TerminalSquare } from "lucide-react";
 
 export default function CommandCenterPage() {
@@ -45,6 +46,9 @@ export default function CommandCenterPage() {
         <div className="bg-zinc-950/40 backdrop-blur-md rounded-2xl border border-purple-500/20 p-2 shadow-xl">
           <CommandCenter />
         </div>
+
+        {/* Interactive Tokenomics & Staking Visualizer */}
+        <TokenomicsVisualizer />
 
         {/* Live DEX Chart & Real-Time Trade Stream Terminal Section */}
         <div className="pt-4 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
