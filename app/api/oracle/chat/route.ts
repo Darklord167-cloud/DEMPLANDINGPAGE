@@ -39,8 +39,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Parse the incoming message, chat history, and model preference from the frontend
-    const { message, history, modelPreference } = await req.json();
+    // 2. Parse the incoming message, chat history, model preference, portfolio context, and optional image
+    const { message, history, modelPreference, portfolioContext, imageBase64 } = await req.json();
 
     if (!message) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
@@ -48,37 +48,44 @@ export async function POST(req: Request) {
 
     const selectedModel = modelPreference === "pro" ? "gemini-2.5-pro" : "gemini-2.5-flash";
 
-    // 3. Initialize the chat with the user's previous conversation history and system instructions
+    let contextPrompt = "";
+    if (portfolioContext) {
+      contextPrompt = `\n\n[USER CONNECTED PORTFOLIO CONTEXT: Wallet Address: ${portfolioContext.walletAddress || "N/A"}, DEMP Balance: ${portfolioContext.dempBalance || 0}, VIP Tier: ${portfolioContext.vipTier || "none"}]`;
+    }
+
+    // 3. Initialize the chat with user's conversation history and system instructions
     const chat = ai.chats.create({
       model: selectedModel,
       history: history || [],
       config: {
-        systemInstruction: `You are an advanced AI operator for Dark Empire Lords LLC.
+        systemInstruction: `You are an advanced AI operator and Market Oracle for Dark Empire Lords LLC.
 
 PRIMARY OBJECTIVE:
-Help the user make money, build systems, and execute efficiently.
+Help the user analyze markets, make strategic decisions, optimize portfolio yield, and execute efficiently.
 
 COMMUNICATION STYLE:
-- Direct and concise
-- Confident and strategic
-- Slightly sarcastic but professional
+- Direct, concise, strategic
+- High-level Web3 operator perspective
 - No fluff, no filler
 
 RESPONSE STRUCTURE:
-1. Situation Analysis
-2. Action Plan
-3. Risks / Warnings
-4. Final Recommendation
-
-BEHAVIOR RULES:
-- Do not give vague advice
-- Prioritize real-world execution
-- Act like a high-level operator scaling a digital empire.`,
+1. Situation / Sentiment Analysis
+2. Actionable Execution Plan
+3. Risk & Volatility Warnings
+4. Final Imperial Directive${contextPrompt}`,
       }
     });
 
-    // 4. Send the new prompt to Gemini and get the response
-    const result = await chat.sendMessage({ message: message });
+    // 4. Send the prompt to Gemini (with optional image inline data)
+    let sendPayload: any = message;
+    if (imageBase64) {
+      sendPayload = [
+        { inlineData: { mimeType: "image/png", data: imageBase64 } },
+        { text: message }
+      ];
+    }
+
+    const result = await chat.sendMessage({ message: sendPayload });
     const responseText = result.text;
 
     // 5. Return the secure response to the client

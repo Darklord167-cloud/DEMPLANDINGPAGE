@@ -48,6 +48,29 @@ export const contactMessages = pgTable("contact_messages", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const watchlists = pgTable("watchlists", {
+  id: serial("id").primaryKey(),
+  walletAddress: text("wallet_address").notNull(),
+  tokenMint: text("token_mint").notNull(),
+  tokenSymbol: text("token_symbol").notNull(),
+  tokenName: text("token_name").notNull(),
+  addedAt: timestamp("added_at").defaultNow().notNull(),
+}, (table) => [
+  index("watchlists_wallet_address_idx").on(table.walletAddress),
+]);
+
+export const priceAlerts = pgTable("price_alerts", {
+  id: serial("id").primaryKey(),
+  walletAddress: text("wallet_address").notNull(),
+  tokenSymbol: text("token_symbol").notNull(),
+  targetPriceUsd: text("target_price_usd").notNull(),
+  condition: text("condition").notNull(), // 'ABOVE' | 'BELOW'
+  triggered: boolean("triggered").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("price_alerts_wallet_address_idx").on(table.walletAddress),
+]);
+
 export const insertUserSchema = z.object({
   username: z.string().min(3).max(50),
   password: z.string().nullable().optional(),
@@ -75,6 +98,20 @@ export const insertContactMessageSchema = z.object({
   message: z.string().min(1, "Message is required").max(5000),
 });
 
+export const insertWatchlistSchema = z.object({
+  walletAddress: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/, "Invalid Solana address"),
+  tokenMint: z.string().min(32).max(44),
+  tokenSymbol: z.string().min(1).max(20),
+  tokenName: z.string().min(1).max(100),
+});
+
+export const insertPriceAlertSchema = z.object({
+  walletAddress: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/, "Invalid Solana address"),
+  tokenSymbol: z.string().min(1).max(20),
+  targetPriceUsd: z.string(),
+  condition: z.enum(["ABOVE", "BELOW"]),
+});
+
 export type InsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type VipVerification = typeof vipVerifications.$inferSelect;
@@ -83,3 +120,7 @@ export type InsertSubscriber = typeof subscribers.$inferInsert;
 export type Subscriber = typeof subscribers.$inferSelect;
 export type InsertContactMessage = typeof contactMessages.$inferInsert;
 export type ContactMessage = typeof contactMessages.$inferSelect;
+export type Watchlist = typeof watchlists.$inferSelect;
+export type InsertWatchlist = typeof watchlists.$inferInsert;
+export type PriceAlert = typeof priceAlerts.$inferSelect;
+export type InsertPriceAlert = typeof priceAlerts.$inferInsert;

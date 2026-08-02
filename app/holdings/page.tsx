@@ -20,6 +20,8 @@ import { JupiterSwapWidget } from "@/components/JupiterSwapWidget";
 import { GeckoTerminalChart } from "@/components/GeckoTerminalChart";
 import { RealTimeTradeStream } from "@/components/RealTimeTradeStream";
 import { PortfolioAnalytics } from "@/components/PortfolioAnalytics";
+import { YieldSimulator } from "@/components/YieldSimulator";
+import { WatchlistManager } from "@/components/WatchlistManager";
 import { 
   fetchTokenTelemetry, 
   formatUsdValue, 
@@ -230,6 +232,10 @@ export default function HoldingsPage() {
             );
           })}
         </div>
+
+        {/* STAKING YIELD SIMULATOR & SURVEILLANCE WATCHLIST */}
+        <YieldSimulator />
+        <WatchlistManager />
 
         {/* JUPITER SWAP PERFORMANCE CONTAINER */}
         <div id="swap-portal" className="border-t border-purple-500/20 pt-16 space-y-8">
