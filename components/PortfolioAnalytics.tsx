@@ -15,9 +15,12 @@ import {
   Layers, 
   ArrowUpRight,
   ShieldCheck,
-  Activity
+  Activity,
+  Volume2,
+  VolumeX
 } from "lucide-react";
 import { usePortfolio } from "@/hooks/usePortfolio";
+import { useAudioHUD } from "@/hooks/useAudioHUD";
 import { toast } from "sonner";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { CustomWalletButton } from "./ui/custom-wallet-button";
@@ -29,6 +32,7 @@ interface PortfolioAnalyticsProps {
 
 export function PortfolioAnalytics({ customWalletAddress, className = "" }: PortfolioAnalyticsProps) {
   const portfolio = usePortfolio(customWalletAddress);
+  const { isMuted, toggleMute, playConnectSound, playTradeClick } = useAudioHUD();
   const { setVisible } = useWalletModal();
   const [copied, setCopied] = useState(false);
 
@@ -120,6 +124,29 @@ export function PortfolioAnalytics({ customWalletAddress, className = "" }: Port
             </div>
           )}
 
+          {/* AUDIO HUD GLOBAL TOGGLE BUTTON */}
+          <button
+            onClick={toggleMute}
+            title={isMuted ? "Audio HUD Disabled (Click to Enable Synthesizer)" : "Audio HUD Active (Click to Mute)"}
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl font-mono text-xs transition-all border ${
+              isMuted
+                ? "bg-zinc-900/80 border-zinc-800 text-zinc-500 hover:text-zinc-300"
+                : "bg-purple-950/80 border-purple-500/50 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.3)] animate-pulse"
+            }`}
+          >
+            {isMuted ? (
+              <>
+                <VolumeX className="w-3.5 h-3.5 text-zinc-500" />
+                <span>AUDIO: OFF</span>
+              </>
+            ) : (
+              <>
+                <Volume2 className="w-3.5 h-3.5 text-purple-400" />
+                <span className="font-bold text-purple-300">AUDIO HUD: ON</span>
+              </>
+            )}
+          </button>
+
           {/* Wallet Address Chip */}
           <button
             onClick={handleCopyAddress}
@@ -137,7 +164,10 @@ export function PortfolioAnalytics({ customWalletAddress, className = "" }: Port
 
           {/* Refresh Button */}
           <button
-            onClick={() => portfolio.refresh()}
+            onClick={() => {
+              portfolio.refresh();
+              playTradeClick();
+            }}
             disabled={portfolio.isLoading}
             title="Refresh Portfolio Telemetry"
             className="p-1.5 rounded-xl bg-zinc-900/80 border border-purple-500/30 text-zinc-300 hover:text-white hover:border-purple-500/60 transition-all font-mono text-xs"
@@ -147,17 +177,23 @@ export function PortfolioAnalytics({ customWalletAddress, className = "" }: Port
 
           {/* Demo Switcher Toggle */}
           <button
-            onClick={portfolio.toggleDemoMode}
+            onClick={() => {
+              portfolio.toggleDemoMode();
+              playConnectSound();
+            }}
             className="px-2.5 py-1 rounded-xl bg-purple-950/50 border border-purple-500/30 text-purple-300 hover:bg-purple-900/40 hover:text-white font-mono text-[11px] uppercase tracking-wider transition-all"
           >
             {portfolio.isDemo ? "Connect Wallet" : "Demo Mode"}
           </button>
 
-          {/* If Demo, allow testing PnL trend flip (Green / Red) */}
+          {/* If Demo, allow testing PnL trend flip (Green / Red) with Audio Connect Chime */}
           {portfolio.isDemo && (
             <button
-              onClick={portfolio.togglePnlTrend}
-              title="Flip Demo PnL Trend to test Green / Red neon glows"
+              onClick={() => {
+                portfolio.togglePnlTrend();
+                playConnectSound();
+              }}
+              title="Flip Demo PnL Trend to test Green / Red neon glows & sound chime"
               className="px-2 py-1 rounded-xl bg-zinc-900/90 border border-zinc-700 text-zinc-400 hover:text-white font-mono text-[10px] uppercase"
             >
               {portfolio.isPositivePnl ? "Test -PnL" : "Test +PnL"}

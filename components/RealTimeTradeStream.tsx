@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   ArrowUpRight, 
   ArrowDownRight, 
@@ -13,10 +13,13 @@ import {
   Copy,
   Check,
   ShieldAlert,
-  Wallet
+  Wallet,
+  Volume2,
+  VolumeX
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useTradeStream, type TradeEvent } from "@/hooks/useTradeStream";
+import { useAudioHUD } from "@/hooks/useAudioHUD";
 import { Button } from "@/components/ui/button";
 
 interface RealTimeTradeStreamProps {
@@ -41,7 +44,28 @@ export function RealTimeTradeStream({
     clearStream,
   } = useTradeStream({ poolAddress });
 
+  const { isMuted, toggleMute, playTradeClick, playWhaleAlert } = useAudioHUD();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Track incoming trade events and synthesize audio HUD alerts
+  const lastTradeIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (trades.length > 0) {
+      const latestTrade = trades[0];
+      if (latestTrade.id !== lastTradeIdRef.current) {
+        // Skip audio synthesis on initial seed render
+        if (lastTradeIdRef.current !== null) {
+          if (latestTrade.isWhale) {
+            playWhaleAlert();
+          } else {
+            playTradeClick();
+          }
+        }
+        lastTradeIdRef.current = latestTrade.id;
+      }
+    }
+  }, [trades, playTradeClick, playWhaleAlert]);
 
   const handleCopyWallet = (wallet: string, id: string) => {
     navigator.clipboard.writeText(wallet);
@@ -111,6 +135,19 @@ export function RealTimeTradeStream({
 
         {/* Action Controls */}
         <div className="flex items-center gap-1.5 shrink-0">
+          {/* Audio HUD Mute Toggle Button */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggleMute}
+            className={`h-8 w-8 border-purple-500/20 bg-zinc-900/80 transition-all ${
+              isMuted ? "text-zinc-500 hover:text-zinc-300" : "text-purple-400 hover:text-purple-300 border-purple-500/50 bg-purple-950/40"
+            }`}
+            title={isMuted ? "Enable Sci-Fi Audio HUD" : "Mute Sci-Fi Audio HUD"}
+          >
+            {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5 text-purple-400 animate-pulse" />}
+          </Button>
+
           <Button
             variant="outline"
             size="icon"

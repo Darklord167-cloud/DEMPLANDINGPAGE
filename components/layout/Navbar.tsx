@@ -1,6 +1,6 @@
 "use client";
 
-import { Shield, Menu, X, Globe, Send, ChevronDown, Sparkles, ExternalLink, Terminal, Cpu, FileText, Map, HelpCircle, Mail, Award, Settings as SettingsIcon, Layers, Copy, CheckCircle } from "lucide-react";
+import { Shield, Menu, X, Globe, Send, ChevronDown, Sparkles, ExternalLink, Terminal, Cpu, FileText, Map, HelpCircle, Mail, Award, Settings as SettingsIcon, Layers, Copy, CheckCircle, Volume2, VolumeX } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "motion/react";
@@ -10,6 +10,7 @@ import { usePathname } from "next/navigation";
 
 import { CustomWalletButton } from "@/components/ui/custom-wallet-button";
 import { useVipTier } from "@/lib/vip-context";
+import { useAudioHUD } from "@/hooks/useAudioHUD";
 import { VipBadge } from "@/components/vip/VipBadge";
 import {
   DropdownMenu,
@@ -42,6 +43,7 @@ export function Navbar() {
   const [copiedMobile, setCopiedMobile] = useState(false);
   const pathname = usePathname();
   const { tier } = useVipTier();
+  const { isMuted, toggleMute } = useAudioHUD();
   const { toast } = useToast();
   const contractAddress = "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
 
@@ -196,6 +198,29 @@ export function Navbar() {
               <DiscordIcon className="h-4 w-4 group-hover:scale-110 transition-transform" />
             </a>
           </div>
+
+          {/* Audio HUD Global Synthesizer Mute Button */}
+          <button
+            onClick={toggleMute}
+            title={isMuted ? "Audio HUD Muted (Click to Enable Sci-Fi Sounds)" : "Audio HUD Active (Click to Mute)"}
+            className={`h-10 px-3 rounded-xl border font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+              isMuted
+                ? "bg-zinc-950/80 border-purple-500/20 text-zinc-500 hover:text-zinc-300"
+                : "bg-purple-950/80 border-purple-500/50 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.3)] animate-pulse"
+            }`}
+          >
+            {isMuted ? (
+              <>
+                <VolumeX className="w-4 h-4 text-zinc-500" />
+                <span className="hidden sm:inline">AUDIO OFF</span>
+              </>
+            ) : (
+              <>
+                <Volume2 className="w-4 h-4 text-purple-400" />
+                <span className="hidden sm:inline text-purple-300">AUDIO HUD</span>
+              </>
+            )}
+          </button>
 
           <CustomWalletButton />
 
