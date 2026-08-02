@@ -1,5 +1,5 @@
 import { CommandCenter } from "@/components/sections/CommandCenter";
-import { GeckoTerminalChart } from "@/components/GeckoTerminalChart";
+import { MarketTelemetry } from "@/components/MarketTelemetry";
 import { RealTimeTradeStream } from "@/components/RealTimeTradeStream";
 import { PortfolioAnalytics } from "@/components/PortfolioAnalytics";
 import { TokenomicsVisualizer } from "@/components/TokenomicsVisualizer";
@@ -53,7 +53,7 @@ export default function CommandCenterPage() {
         {/* Live DEX Chart & Real-Time Trade Stream Terminal Section */}
         <div className="pt-4 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           <div className="lg:col-span-2">
-            <GeckoTerminalChart height={520} title="$DEMP Command Center Market Telemetry" />
+            <MarketTelemetry height={520} title="$DEMP Command Center Market Telemetry" />
           </div>
           <div className="lg:col-span-1">
             <RealTimeTradeStream height={520} />

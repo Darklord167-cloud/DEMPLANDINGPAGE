@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { JupiterSwapWidget } from "@/components/JupiterSwapWidget";
-import { GeckoTerminalChart } from "@/components/GeckoTerminalChart";
+import { MarketTelemetry } from "@/components/MarketTelemetry";
 import { RealTimeTradeStream } from "@/components/RealTimeTradeStream";
 import { PortfolioAnalytics } from "@/components/PortfolioAnalytics";
 import { YieldSimulator } from "@/components/YieldSimulator";
@@ -198,7 +198,7 @@ export default function HoldingsPage() {
         {/* GECKO TERMINAL LIVE CHART & REAL-TIME TRADE STREAM WIDGET */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           <div className="lg:col-span-2">
-            <GeckoTerminalChart height={520} />
+            <MarketTelemetry height={520} />
           </div>
           <div className="lg:col-span-1">
             <RealTimeTradeStream height={520} />
