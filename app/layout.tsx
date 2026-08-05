@@ -1,4 +1,4 @@
-import type {Metadata} from 'next';
+import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import { Orbitron, Rajdhani, Space_Grotesk, Inter } from 'next/font/google';
 import './globals.css';
@@ -6,9 +6,10 @@ import { cn } from "@/lib/utils";
 import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { PwaInstaller } from "@/components/PwaInstaller";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 const orbitron = Orbitron({
   subsets: ['latin'],
@@ -26,6 +27,13 @@ const spaceGrotesk = Space_Grotesk({
   variable: '--font-space-grotesk',
 });
 
+export const viewport: Viewport = {
+  themeColor: '#7c3aed',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://darkempirelords.com'),
   title: {
@@ -34,6 +42,14 @@ export const metadata: Metadata = {
   },
   description: "The Central Command for Dark Empire's Digital Sovereignty. Live $DEMP token tracking, whale alerts, and Web3 portfolio analytics.",
   manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Dark Empire Command Center',
+  },
+  formatDetection: {
+    telephone: false,
+  },
   openGraph: {
     title: 'Dark Empire Command Center',
     description: "The Central Command for Dark Empire's Digital Sovereignty. Live $DEMP token tracking, whale alerts, and Web3 portfolio analytics.",
@@ -48,17 +64,26 @@ export const metadata: Metadata = {
     images: ['/assets/demp-banner.svg'],
   },
   icons: {
-    icon: '/assets/demp-logo.svg',
+    icon: [
+      { url: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/assets/demp-logo.svg', type: 'image/svg+xml' },
+    ],
     shortcut: '/assets/demp-logo.svg',
-    apple: '/assets/demp-logo.svg',
+    apple: '/icon-192x192.png',
   },
 };
 
 const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
-export default function RootLayout({children}: {children: React.ReactNode}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={cn("dark", orbitron.variable, rajdhani.variable, spaceGrotesk.variable, "font-sans", inter.variable)}>
+      <head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Dark Empire Command Center" />
+        <link rel="apple-touch-icon" href="/icon-192x192.png" />
+      </head>
       <body className="bg-[#09090b] text-foreground font-sans antialiased selection:bg-purple-900/40" suppressHydrationWarning>
         {gaMeasurementId && (
           <>
@@ -96,6 +121,9 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
               </main>
               <Footer />
             </div>
+            
+            {/* Progressive Web App Client Installer Banner & SW Trigger */}
+            <PwaInstaller />
           </div>
         </Providers>
         <SpeedInsights />

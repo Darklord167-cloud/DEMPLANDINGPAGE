@@ -27,17 +27,27 @@ export function Contact() {
 
   const contactMutation = useMutation({
     mutationFn: async (data: InsertContactMessage) => {
-      const res = await apiRequest("POST", "/api/contact", data);
-      return res.json();
+      console.log("[Contact Form] Transmitting message payload:", data);
+      try {
+        const res = await apiRequest("POST", "/api/contact", data);
+        const json = await res.json();
+        console.log("[Contact Form] API response received:", json);
+        return json;
+      } catch (error) {
+        console.error("[Contact Form] Network or API error:", error);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("[Contact Form] Transmission successful:", data);
       toast({
         title: "Message Sent",
-        description: "We've received your message and will respond shortly.",
+        description: data?.message || "We've received your message and will respond shortly.",
       });
       reset();
     },
     onError: (error: Error) => {
+      console.error("[Contact Form] Transmission failed:", error);
       let description = "Something went wrong. Please try again.";
       try {
         const raw = error.message;
@@ -45,9 +55,11 @@ export function Contact() {
         if (jsonStart !== -1) {
           const parsed = JSON.parse(raw.slice(jsonStart));
           if (parsed?.message) description = parsed.message;
+        } else if (error.message) {
+          description = error.message;
         }
       } catch {
-        description = error.message || description;
+        if (error.message) description = error.message;
       }
       toast({
         title: "Failed to Send",
@@ -56,6 +68,15 @@ export function Contact() {
       });
     },
   });
+
+  const onSubmit = async (data: InsertContactMessage) => {
+    try {
+      console.log("[Contact Form] User initiated submission:", data);
+      await contactMutation.mutateAsync(data);
+    } catch (err) {
+      console.error("[Contact Form] Handled error in onSubmit:", err);
+    }
+  };
 
   return (
     <section id="contact-form" className="py-24 bg-black relative border-t border-white/5">
@@ -97,7 +118,7 @@ export function Contact() {
                 </Button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit((data) => contactMutation.mutate(data))} className="space-y-6" suppressHydrationWarning>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" suppressHydrationWarning>
                 <div className="grid md:grid-cols-2 gap-6" suppressHydrationWarning>
                   <div className="space-y-2" suppressHydrationWarning>
                     <Label htmlFor="name" className="text-white/70 font-mono text-xs tracking-widest uppercase">Name</Label>

@@ -1,0 +1,33 @@
+import type { MetadataRoute } from "next";
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: "Dark Empire Command Center",
+    short_name: "Dark Empire",
+    description: "The Central Command for Dark Empire's Digital Sovereignty.",
+    start_url: "/",
+    display: "standalone",
+    background_color: "#09090b",
+    theme_color: "#7c3aed",
+    icons: [
+      {
+        src: "/icon-192x192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "maskable",
+      },
+      {
+        src: "/icon-512x512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
+      },
+      {
+        src: "/assets/demp-logo.svg",
+        sizes: "any",
+        type: "image/svg+xml",
+        purpose: "any",
+      },
+    ],
+  };
+}

@@ -1,16 +1,29 @@
 {
-  "name": "Dark Empire Holdings | Web3 & AI Intelligence Platform",
+  "name": "Dark Empire Command Center",
   "short_name": "Dark Empire",
-  "description": "High-yield Solana DeFi, real-time DEX stream, and Ultron AI Oracle",
+  "description": "The Central Command for Dark Empire's Digital Sovereignty.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#020b18",
-  "theme_color": "#ff6600",
+  "background_color": "#09090b",
+  "theme_color": "#7c3aed",
   "icons": [
     {
-      "src": "/favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/assets/demp-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ]
 }
