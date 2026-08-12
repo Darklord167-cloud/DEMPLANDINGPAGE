@@ -80,7 +80,7 @@ export function Navbar() {
   const socialLinks = [
     { name: "Website", href: "https://darkempirelords.com", icon: Globe, color: "text-purple-400" },
     { name: "Twitter / X", href: "https://x.com/darkhacker167", icon: XIcon, color: "text-white" },
-    { name: "Telegram", href: "https://t.me/DarkEmpireRelayBot", icon: Send, color: "text-[#0088cc]" },
+    { name: "Telegram", href: "https://t.me/DarkEmpireGemeniBot", icon: Send, color: "text-[#0088cc]" },
     { name: "Discord", href: "https://discord.gg/cyWVcvyZ", icon: DiscordIcon, color: "text-[#5865F2]" },
   ];
 
@@ -178,11 +178,11 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-3 shrink-0">
           <div className="flex items-center gap-2 mr-1" data-testid="social-hub-nav-icons">
             <a
-              href="https://t.me/DarkEmpireRelayBot"
+              href="https://t.me/DarkEmpireGemeniBot"
               target="_blank"
               rel="noopener noreferrer"
-              title="Telegram Relay Bot"
-              aria-label="Telegram Relay Bot"
+              title="Telegram Gemini Bot"
+              aria-label="Telegram Gemini Bot"
               className="group relative p-2.5 rounded-xl bg-cyan-950/30 border border-[#0088cc]/40 text-[#0088cc] hover:bg-[#0088cc]/20 hover:border-[#0088cc] hover:shadow-[0_0_15px_rgba(0,136,204,0.6)] transition-all duration-300 drop-shadow-[0_0_8px_rgba(0,136,204,0.4)] flex items-center justify-center"
             >
               <Send className="h-4 w-4 group-hover:scale-110 transition-transform" />

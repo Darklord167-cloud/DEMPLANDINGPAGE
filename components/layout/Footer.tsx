@@ -93,7 +93,7 @@ export function Footer() {
                 <span className="font-heading font-semibold text-lg">Follow on X</span>
                 <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
               </a>
-              <a href="https://t.me/DarkEmpireRelayBot" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-muted-foreground hover:text-white transition-colors group" data-testid="link-telegram">
+              <a href="https://t.me/DarkEmpireGemeniBot" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-muted-foreground hover:text-white transition-colors group" data-testid="link-telegram">
                 <div className="h-10 w-10 rounded-full bg-cyan-950/30 border border-[#0088cc]/40 flex items-center justify-center group-hover:border-[#0088cc] group-hover:shadow-[0_0_15px_rgba(0,136,204,0.6)] transition-all drop-shadow-[0_0_8px_rgba(0,136,204,0.4)]">
                   <Send className="h-4 w-4 text-[#0088cc] group-hover:text-cyan-300 transition-colors" />
                 </div>

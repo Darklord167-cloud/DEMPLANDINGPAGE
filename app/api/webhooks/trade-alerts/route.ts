@@ -254,7 +254,7 @@ export async function POST(req: Request) {
 
     // Telegram Payload Formatting
     const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
-    const telegramChatId = process.env.TELEGRAM_CHAT_ID || rawTrade.chat_id || body.chat_id || '@DarkEmpireHQ';
+    const telegramChatId = process.env.TELEGRAM_CHAT_ID || rawTrade.chat_id || body.chat_id || '@DarkEmpireGemeniBot';
 
     const telegramText = [
       `🚨 *WHALE ALERT DETECTED* 🚨`,
