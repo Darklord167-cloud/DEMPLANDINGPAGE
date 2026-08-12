@@ -100,7 +100,7 @@ export function Footer() {
                 <span className="font-heading font-semibold text-lg">Join Telegram</span>
                 <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-[#0088cc]" />
               </a>
-              <a href="https://discord.gg/FYVC94VD" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-muted-foreground hover:text-white transition-colors group" data-testid="link-discord">
+              <a href="https://discord.gg/cyWVcvyZ" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-muted-foreground hover:text-white transition-colors group" data-testid="link-discord">
                 <div className="h-10 w-10 rounded-full bg-indigo-950/30 border border-[#5865F2]/40 flex items-center justify-center group-hover:border-[#5865F2] group-hover:shadow-[0_0_15px_rgba(88,101,242,0.6)] transition-all drop-shadow-[0_0_8px_rgba(88,101,242,0.4)]">
                   <DiscordIcon className="h-4 w-4 text-[#5865F2] group-hover:text-indigo-300 transition-colors" />
                 </div>

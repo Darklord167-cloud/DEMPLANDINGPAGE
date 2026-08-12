@@ -81,7 +81,7 @@ export function Navbar() {
     { name: "Website", href: "https://darkempirelords.com", icon: Globe, color: "text-purple-400" },
     { name: "Twitter / X", href: "https://x.com/darkhacker167", icon: XIcon, color: "text-white" },
     { name: "Telegram", href: "https://t.me/DarkEmpireRelayBot", icon: Send, color: "text-[#0088cc]" },
-    { name: "Discord", href: "https://discord.gg/FYVC94VD", icon: DiscordIcon, color: "text-[#5865F2]" },
+    { name: "Discord", href: "https://discord.gg/cyWVcvyZ", icon: DiscordIcon, color: "text-[#5865F2]" },
   ];
 
   const handleCopyMobile = () => {
@@ -188,7 +188,7 @@ export function Navbar() {
               <Send className="h-4 w-4 group-hover:scale-110 transition-transform" />
             </a>
             <a
-              href="https://discord.gg/FYVC94VD"
+              href="https://discord.gg/cyWVcvyZ"
               target="_blank"
               rel="noopener noreferrer"
               title="Discord Server"
