@@ -7,25 +7,30 @@ import { useState } from "react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { JupiterSwapWidget } from "@/components/JupiterSwapWidget";
+import { SolanaVerificationHub } from "@/components/SolanaVerificationHub";
+import { DEMP_TOKEN_MINT, DEMP_DEPLOYER_WALLET, DEMP_SUPPLY_ENDPOINT } from "@/lib/solana/config";
 
-const SUPPLY_ENDPOINT = "https://empire-token-supply.replit.app/api/supply.json";
+const SUPPLY_ENDPOINT = DEMP_SUPPLY_ENDPOINT;
 
 export function TokenInfo() {
   const [copiedContract, setCopiedContract] = useState(false);
+  const [copiedDeployer, setCopiedDeployer] = useState(false);
   const [copiedEndpoint, setCopiedEndpoint] = useState(false);
   const [copiedIcon, setCopiedIcon] = useState(false);
   const [copiedBanner, setCopiedBanner] = useState(false);
-  const contractAddress = "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
+  const contractAddress = DEMP_TOKEN_MINT;
+  const deployerAddress = DEMP_DEPLOYER_WALLET;
   const { toast } = useToast();
   
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
 
-  const copy = (text: string, type: "contract" | "endpoint" | "icon" | "banner") => {
+  const copy = (text: string, type: "contract" | "deployer" | "endpoint" | "icon" | "banner") => {
     navigator.clipboard.writeText(text);
     
     let setter;
     switch (type) {
       case "contract": setter = setCopiedContract; break;
+      case "deployer": setter = setCopiedDeployer; break;
       case "endpoint": setter = setCopiedEndpoint; break;
       case "icon": setter = setCopiedIcon; break;
       case "banner": setter = setCopiedBanner; break;
@@ -34,7 +39,7 @@ export function TokenInfo() {
     setter(true);
     toast({
       title: "Copied to clipboard",
-      description: `${type === "contract" ? "Contract address" : type === "endpoint" ? "Supply endpoint" : type === "icon" ? "Icon URL" : "Banner URL"} copied.`
+      description: `${type === "contract" ? "Contract address" : type === "deployer" ? "Deployer wallet address" : type === "endpoint" ? "Supply endpoint" : type === "icon" ? "Icon URL" : "Banner URL"} copied.`
     });
     setTimeout(() => setter(false), 2000);
   };
@@ -62,25 +67,45 @@ export function TokenInfo() {
             </p>
 
             <div className="space-y-4">
-              <div className="p-6 rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm">
-                <p className="text-sm text-white/50 mb-2 font-mono">CONTRACT ADDRESS (SOL)</p>
-                <div className="flex items-center justify-between gap-4">
-                  <code className="text-primary font-mono text-sm md:text-base break-all" data-testid="text-contract-address">
-                    {contractAddress}
-                  </code>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => copy(contractAddress, "contract")}
-                    className="hover:bg-primary/20 text-primary shrink-0"
-                    data-testid="button-copy-contract"
-                  >
-                    {copiedContract ? <CheckCircle className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
-                  </Button>
+              <div className="p-6 rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm space-y-4">
+                <div>
+                  <p className="text-xs text-white/50 mb-1 font-mono uppercase tracking-wider">CONTRACT ADDRESS (SOL MINT)</p>
+                  <div className="flex items-center justify-between gap-4">
+                    <code className="text-primary font-mono text-sm md:text-base break-all" data-testid="text-contract-address">
+                      {contractAddress}
+                    </code>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => copy(contractAddress, "contract")}
+                      className="hover:bg-primary/20 text-primary shrink-0"
+                      data-testid="button-copy-contract"
+                    >
+                      {copiedContract ? <CheckCircle className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-white/10">
+                  <p className="text-xs text-white/50 mb-1 font-mono uppercase tracking-wider">DEPLOYER WALLET ADDRESS (AUTHORITY)</p>
+                  <div className="flex items-center justify-between gap-4">
+                    <code className="text-emerald-400 font-mono text-sm md:text-base break-all" data-testid="text-deployer-address">
+                      {deployerAddress}
+                    </code>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => copy(deployerAddress, "deployer")}
+                      className="hover:bg-emerald-500/20 text-emerald-400 shrink-0"
+                      data-testid="button-copy-deployer"
+                    >
+                      {copiedDeployer ? <CheckCircle className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
+                    </Button>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex gap-4 flex-wrap">
+              <div className="flex gap-3 flex-wrap">
                  <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-green-500/30 bg-green-500/10 text-green-400 font-mono text-xs">
                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                     SOLANA VERIFIED
@@ -88,6 +113,10 @@ export function TokenInfo() {
                  <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-400 font-mono text-xs">
                     <div className="w-2 h-2 rounded-full bg-blue-500" />
                     LIQUIDITY LOCKED
+                 </div>
+                 <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-400 font-mono text-xs">
+                    <div className="w-2 h-2 rounded-full bg-purple-500" />
+                    METAPLEX SYNCED
                  </div>
               </div>
             </div>
@@ -379,6 +408,18 @@ export function TokenInfo() {
               </p>
             </div>
           </div>
+        </motion.div>
+
+        {/* Multi-Platform Solana Token & Logo Verification Hub */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.25 }}
+          id="verification-suite"
+          className="mt-20 max-w-5xl mx-auto"
+        >
+          <SolanaVerificationHub />
         </motion.div>
       </div>
     </section>

@@ -1,0 +1,77 @@
+{
+  "token": {
+    "name": "Dark Empire",
+    "symbol": "DEMP",
+    "mint": "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx",
+    "deployerWallet": "Gy37g7iDGQiom6wwVcyHKVuZPZzmVTgwa3wJZQTRqqTH",
+    "decimals": 6,
+    "logoUrlPng": "https://darkempirelords.com/assets/demp-logo.png",
+    "logoUrlSvg": "https://darkempirelords.com/assets/demp-logo.svg",
+    "bannerUrlSvg": "https://darkempirelords.com/assets/demp-banner.svg",
+    "website": "https://darkempirelords.com",
+    "tokenPage": "https://darkempirelords.com/token",
+    "metadataUri": "https://darkempirelords.com/api/token-metadata",
+    "supplyApi": "https://circulating-supply-endpoint.vercel.app/api/supply"
+  },
+  "platforms": {
+    "jupiter": {
+      "platformName": "Jupiter (jup.ag)",
+      "submissionUrl": "https://station.jup.ag/docs/token-list/token-list-api",
+      "verificationType": "Metaplex On-Chain Metadata Sync & Strict List Application",
+      "prPayload": {
+        "chainId": 101,
+        "address": "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx",
+        "symbol": "DEMP",
+        "name": "Dark Empire",
+        "decimals": 6,
+        "logoURI": "https://darkempirelords.com/assets/demp-logo.png",
+        "tags": ["community", "utility-token", "solana-vip"],
+        "extensions": {
+          "website": "https://darkempirelords.com",
+          "coingeckoId": "dark-empire",
+          "deployer": "Gy37g7iDGQiom6wwVcyHKVuZPZzmVTgwa3wJZQTRqqTH"
+        }
+      }
+    },
+    "dexscreener": {
+      "platformName": "DexScreener",
+      "submissionUrl": "https://dexscreener.com/solana/8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx",
+      "verificationType": "Token Profile Update & Header Customization",
+      "payload": {
+        "tokenAddress": "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx",
+        "chain": "solana",
+        "icon": "https://darkempirelords.com/assets/demp-logo.png",
+        "header": "https://darkempirelords.com/assets/demp-banner.svg",
+        "description": "Official utility token of Dark Empire Lords LLC powering high-speed Solana RPC relays, AI Oracle intelligence, and VIP Syndicate governance.",
+        "links": [
+          { "type": "website", "url": "https://darkempirelords.com" },
+          { "type": "telegram", "url": "https://t.me/darkempirehq" }
+        ],
+        "deployerAuthority": "Gy37g7iDGQiom6wwVcyHKVuZPZzmVTgwa3wJZQTRqqTH"
+      }
+    },
+    "solscan": {
+      "platformName": "Solscan",
+      "submissionUrl": "https://solscan.io/token/8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx#tokenInfo",
+      "verificationType": "Token Profile Claim & Authority Sign-off",
+      "payload": {
+        "tokenAddress": "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx",
+        "ownerWallet": "Gy37g7iDGQiom6wwVcyHKVuZPZzmVTgwa3wJZQTRqqTH",
+        "officialName": "Dark Empire",
+        "officialSymbol": "DEMP",
+        "iconUrl": "https://darkempirelords.com/assets/demp-logo.png",
+        "officialEmail": "vip@darkempirelords.com"
+      }
+    },
+    "birdeye": {
+      "platformName": "Birdeye Finance",
+      "submissionUrl": "https://birdeye.so/token/8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx?chain=solana",
+      "verificationType": "Profile Claim & Metadata Sync",
+      "payload": {
+        "address": "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx",
+        "deployer": "Gy37g7iDGQiom6wwVcyHKVuZPZzmVTgwa3wJZQTRqqTH",
+        "logo": "https://darkempirelords.com/assets/demp-logo.png"
+      }
+    }
+  }
+}

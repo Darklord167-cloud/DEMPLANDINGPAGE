@@ -2,77 +2,101 @@
   <defs>
     <!-- Background Gradients -->
     <radialGradient id="demp-bg" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#18072b" />
-      <stop offset="100%" stop-color="#05030a" />
+      <stop offset="0%" stop-color="#230940" />
+      <stop offset="60%" stop-color="#0f041d" />
+      <stop offset="100%" stop-color="#030108" />
     </radialGradient>
     <radialGradient id="demp-glow-purple" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.45" />
-      <stop offset="100%" stop-color="#a855f7" stop-opacity="0" />
+      <stop offset="0%" stop-color="#c084fc" stop-opacity="0.6" />
+      <stop offset="50%" stop-color="#a855f7" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#7e22ce" stop-opacity="0" />
     </radialGradient>
     <radialGradient id="demp-glow-cyan" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.35" />
-      <stop offset="100%" stop-color="#00f0ff" stop-opacity="0" />
+      <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.5" />
+      <stop offset="60%" stop-color="#06b6d4" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#0284c7" stop-opacity="0" />
     </radialGradient>
     
     <!-- Linear Gradients for Cyber Crest -->
     <linearGradient id="demp-purple-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#c084fc" />
-      <stop offset="50%" stop-color="#a855f7" />
+      <stop offset="0%" stop-color="#f472b6" />
+      <stop offset="30%" stop-color="#e879f9" />
+      <stop offset="70%" stop-color="#a855f7" />
       <stop offset="100%" stop-color="#6b21a8" />
     </linearGradient>
 
     <linearGradient id="demp-cyan-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#67e8f9" />
-      <stop offset="100%" stop-color="#0284c7" />
+      <stop offset="0%" stop-color="#a5f3fc" />
+      <stop offset="40%" stop-color="#00f0ff" />
+      <stop offset="80%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#0369a1" />
     </linearGradient>
 
     <linearGradient id="demp-accent-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#f472b6" />
-      <stop offset="100%" stop-color="#a855f7" />
+      <stop offset="0%" stop-color="#ff79c6" />
+      <stop offset="50%" stop-color="#f472b6" />
+      <stop offset="100%" stop-color="#c084fc" />
     </linearGradient>
     
-    <!-- Glow Filter -->
-    <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="6" result="blur" />
+    <!-- High Intensity Glow Filters -->
+    <filter id="neon-glow-purple" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur1" />
+      <feGaussianBlur stdDeviation="3" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur1" />
+        <feMergeNode in="blur2" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <filter id="neon-glow-cyan" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="7" result="blur" />
       <feMerge>
         <feMergeNode in="blur" />
         <feMergeNode in="SourceGraphic" />
       </feMerge>
     </filter>
+
+    <!-- Crisp Drop Shadow Filter -->
+    <filter id="shield-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#a855f7" flood-opacity="0.5"/>
+    </filter>
   </defs>
 
   <!-- Background Base -->
-  <rect width="512" height="512" rx="96" fill="url(#demp-bg)"/>
+  <rect width="512" height="512" rx="100" fill="url(#demp-bg)"/>
   <circle cx="256" cy="256" r="240" fill="url(#demp-glow-purple)"/>
   <circle cx="256" cy="256" r="160" fill="url(#demp-glow-cyan)"/>
   
   <!-- Outer Tech Rings -->
-  <circle cx="256" cy="256" r="230" fill="none" stroke="#a855f7" stroke-width="6" stroke-dasharray="24 12" opacity="0.75" filter="url(#neon-glow)"/>
-  <circle cx="256" cy="256" r="210" fill="none" stroke="#00f0ff" stroke-width="3" stroke-dasharray="8 16" opacity="0.6"/>
-  <circle cx="256" cy="256" r="192" fill="none" stroke="#6b21a8" stroke-width="2" opacity="0.4"/>
+  <circle cx="256" cy="256" r="232" fill="none" stroke="#e879f9" stroke-width="5" stroke-dasharray="28 14" opacity="0.85" filter="url(#neon-glow-purple)"/>
+  <circle cx="256" cy="256" r="212" fill="none" stroke="#00f0ff" stroke-width="3" stroke-dasharray="10 18" opacity="0.75" filter="url(#neon-glow-cyan)"/>
+  <circle cx="256" cy="256" r="194" fill="none" stroke="#6b21a8" stroke-width="2.5" opacity="0.5"/>
   
-  <!-- Outer Shield Geometry -->
-  <path d="M256,64 L390,120 L390,260 C390,350 256,440 256,440 C256,440 122,350 122,260 L122,120 Z" 
-        fill="#0b0716" stroke="url(#demp-purple-grad)" stroke-width="8" filter="url(#neon-glow)"/>
+  <!-- Outer Shield Shadow & Geometry -->
+  <path d="M256,60 L394,116 L394,264 C394,356 256,448 256,448 C256,448 118,356 118,264 L118,116 Z" 
+        fill="#0b0618" stroke="url(#demp-purple-grad)" stroke-width="9" filter="url(#shield-shadow)"/>
+  <path d="M256,60 L394,116 L394,264 C394,356 256,448 256,448 C256,448 118,356 118,264 L118,116 Z" 
+        fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.4"/>
   
   <!-- Inner Cyber Wings / Crest -->
-  <path d="M256,104 L352,148 L352,252 C352,320 256,392 256,392 C256,392 160,320 160,252 L160,148 Z" 
-        fill="#130924" stroke="url(#demp-cyan-grad)" stroke-width="4" opacity="0.9"/>
+  <path d="M256,100 L356,144 L356,254 C356,324 256,398 256,398 C256,398 156,324 156,254 L156,144 Z" 
+        fill="#120827" stroke="url(#demp-cyan-grad)" stroke-width="5" opacity="0.95" filter="url(#neon-glow-cyan)"/>
         
   <!-- Central Imperial Crown / Horns Overlay -->
   <g transform="translate(6, 4)">
     <!-- Crown Points -->
-    <path d="M190,170 L220,210 L250,150 L280,210 L310,170 L295,240 L205,240 Z" fill="url(#demp-accent-grad)" opacity="0.9"/>
+    <path d="M188,166 L220,208 L250,144 L280,208 L312,166 L296,238 L204,238 Z" fill="url(#demp-accent-grad)" opacity="0.95" filter="url(#neon-glow-purple)"/>
     
     <!-- Diamond Core Crest -->
-    <path d="M250,190 L310,270 L250,350 L190,270 Z" fill="url(#demp-purple-grad)" stroke="#00f0ff" stroke-width="4" filter="url(#neon-glow)"/>
-    <circle cx="250" cy="270" r="32" fill="#07030e" stroke="#00f0ff" stroke-width="5"/>
-    <circle cx="250" cy="270" r="14" fill="url(#demp-cyan-grad)"/>
-    <circle cx="250" cy="270" r="5" fill="#ffffff"/>
+    <path d="M250,186 L312,268 L250,350 L188,268 Z" fill="url(#demp-purple-grad)" stroke="#00f0ff" stroke-width="5" filter="url(#neon-glow-purple)"/>
+    <circle cx="250" cy="268" r="34" fill="#07030e" stroke="#00f0ff" stroke-width="5" filter="url(#neon-glow-cyan)"/>
+    <circle cx="250" cy="268" r="16" fill="url(#demp-cyan-grad)"/>
+    <circle cx="250" cy="268" r="6" fill="#ffffff" filter="url(#neon-glow-cyan)"/>
   </g>
 
   <!-- Glowing Corner Cyber Nodes -->
-  <circle cx="122" cy="120" r="6" fill="#00f0ff"/>
-  <circle cx="390" cy="120" r="6" fill="#00f0ff"/>
-  <circle cx="256" cy="64" r="7" fill="#c084fc"/>
+  <circle cx="118" cy="116" r="7" fill="#00f0ff" filter="url(#neon-glow-cyan)"/>
+  <circle cx="394" cy="116" r="7" fill="#00f0ff" filter="url(#neon-glow-cyan)"/>
+  <circle cx="256" cy="60" r="8" fill="#e879f9" filter="url(#neon-glow-purple)"/>
 </svg>

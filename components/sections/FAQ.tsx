@@ -7,9 +7,11 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
+import { DEMP_SUPPLY_ENDPOINT } from "@/lib/solana/config";
+
 const CONTRACT = "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
 const SOLSCAN_URL = `https://solscan.io/token/${CONTRACT}`;
-const SUPPLY_ENDPOINT = "https://empire-token-supply.replit.app/api/supply.json";
+const SUPPLY_ENDPOINT = DEMP_SUPPLY_ENDPOINT;
 
 interface FaqItem {
   category: "contract" | "security" | "swap" | "governance" | "entity";
@@ -20,12 +22,16 @@ interface FaqItem {
 const faqs: FaqItem[] = [
   {
     category: "contract",
-    question: "Where can I verify the official $DEMP Token contract address?",
+    question: "Where can I verify the official $DEMP Token contract address and Deployer Wallet?",
     answer: (
       <>
         The official $DEMP token contract deployed on Solana mainnet-beta is{" "}
         <code className="text-purple-300 font-mono text-xs bg-purple-950/80 px-2.5 py-1 rounded border border-purple-500/40 font-bold select-all break-all inline-block my-1">
           {CONTRACT}
+        </code>
+        {" "}and the verified Deployer Authority wallet is{" "}
+        <code className="text-emerald-300 font-mono text-xs bg-emerald-950/80 px-2.5 py-1 rounded border border-emerald-500/40 font-bold select-all break-all inline-block my-1">
+          Gy37g7iDGQiom6wwVcyHKVuZPZzmVTgwa3wJZQTRqqTH
         </code>
         . You can independently verify token mint authority, 100% locked liquidity, and transaction history on{" "}
         <a href={SOLSCAN_URL} target="_blank" rel="noreferrer" className="text-purple-400 hover:text-purple-300 underline font-semibold inline-flex items-center gap-1">

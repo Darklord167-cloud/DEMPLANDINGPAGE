@@ -3,6 +3,8 @@
  */
 
 export const DEMP_TOKEN_MINT = "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
+export const DEMP_DEPLOYER_WALLET = "Gy37g7iDGQiom6wwVcyHKVuZPZzmVTgwa3wJZQTRqqTH";
+export const DEMP_SUPPLY_ENDPOINT = "https://circulating-supply-endpoint.vercel.app/api/supply";
 export const USDC_TOKEN_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 export const SOL_TOKEN_MINT = "So11111111111111111111111111111111111111112";
 

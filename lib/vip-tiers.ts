@@ -23,6 +23,7 @@ export interface VipTierDef {
 }
 
 export const DEMP_MINT_ADDRESS = "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
+export const DEMP_DEPLOYER_WALLET = "Gy37g7iDGQiom6wwVcyHKVuZPZzmVTgwa3wJZQTRqqTH";
 
 export const VIP_TIERS: Record<string, VipTierDef> = {
   none: {
