@@ -7,7 +7,7 @@ async function main() {
     process.exit(1);
   }
 
-  console.log("🔄 Registering 8 Telegram commands for @DarkEmpireGemeniBot...");
+  console.log("🔄 Registering 8 Telegram commands for @DarkEmpireRelayBot...");
 
   try {
     const res = await fetch(`https://api.telegram.org/bot${token}/setMyCommands`, {
@@ -20,7 +20,7 @@ async function main() {
 
     const data = await res.json();
     if (data.ok) {
-      console.log("✅ Successfully updated command list on @DarkEmpireGemeniBot!");
+      console.log("✅ Successfully updated command list on @DarkEmpireRelayBot!");
       console.log("List of registered commands:");
       BOT_COMMANDS.forEach((cmd) => {
         console.log(`  /${cmd.command.padEnd(10)} - ${cmd.description}`);

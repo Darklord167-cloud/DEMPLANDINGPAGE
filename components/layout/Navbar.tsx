@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { DEMP_TOKEN_MINT } from "@/lib/solana/config";
 
 function XIcon(props: React.ComponentProps<"svg">) {
   return (
@@ -45,7 +46,7 @@ export function Navbar() {
   const { tier } = useVipTier();
   const { isMuted, toggleMute } = useAudioHUD();
   const { toast } = useToast();
-  const contractAddress = "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
+  const contractAddress = DEMP_TOKEN_MINT;
 
   // Primary links visible on desktop header
   const primaryLinks = [
@@ -80,7 +81,7 @@ export function Navbar() {
   const socialLinks = [
     { name: "Website", href: "https://darkempirelords.com", icon: Globe, color: "text-purple-400" },
     { name: "Twitter / X", href: "https://x.com/darkhacker167", icon: XIcon, color: "text-white" },
-    { name: "Telegram", href: "https://t.me/DarkEmpireGemeniBot", icon: Send, color: "text-[#0088cc]" },
+    { name: "Telegram", href: "https://t.me/DarkEmpireRelayBot", icon: Send, color: "text-[#0088cc]" },
     { name: "Discord", href: "https://discord.gg/cyWVcvyZ", icon: DiscordIcon, color: "text-[#5865F2]" },
   ];
 
@@ -178,7 +179,7 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-3 shrink-0">
           <div className="flex items-center gap-2 mr-1" data-testid="social-hub-nav-icons">
             <a
-              href="https://t.me/DarkEmpireGemeniBot"
+              href="https://t.me/DarkEmpireRelayBot"
               target="_blank"
               rel="noopener noreferrer"
               title="Telegram Gemini Bot"

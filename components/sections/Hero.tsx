@@ -19,12 +19,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-
+import { DEMP_TOKEN_MINT } from "@/lib/solana/config";
 
 export const Hero = React.memo(function Hero() {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
-  const contractAddress = "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
+  const contractAddress = DEMP_TOKEN_MINT;
 
   const handleCopyContract = () => {
     navigator.clipboard.writeText(contractAddress);

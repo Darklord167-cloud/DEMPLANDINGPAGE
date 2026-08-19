@@ -43,7 +43,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       success: results.setMyCommands?.ok || false,
-      bot: "@DarkEmpireGemeniBot",
+      bot: "@DarkEmpireRelayBot",
       webhookUrl,
       results
     });

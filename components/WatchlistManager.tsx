@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { DEMP_TOKEN_MINT } from "@/lib/solana/config";
 
 export interface Watchitem {
   id: string;
@@ -30,7 +31,7 @@ const DEFAULT_WATCHLIST: Watchitem[] = [
     id: "demp-1",
     symbol: "DEMP",
     name: "Dark Empire Token",
-    mint: "6Higx2gdaqYaukrkNomp1pVJX8uQNHAhavLE7qFnHjYD",
+    mint: DEMP_TOKEN_MINT,
     priceUsd: 0.0485,
     change24h: 12.45,
   },

@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     return NextResponse.json(fallbackData);
   }
 
-  const apiKey = process.env.BIRDEYE_API_KEY;
+  const apiKey = process.env.BIRDEYE_API_KEY || process.env.NEXT_PUBLIC_BIRDEYE_API_KEY;
   
   if (!apiKey) {
     console.warn("BIRDEYE_API_KEY is not configured, returning fallback data");

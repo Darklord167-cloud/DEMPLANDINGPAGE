@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { fetchTokenTelemetry } from "@/lib/solana/telemetry";
+import { DEMP_TOKEN_MINT } from "@/lib/solana/config";
 
 /** Target $DEMP Solana Mint / Token Address */
-export const DEMP_TOKEN_ADDRESS = "6Higx2gdaqYaukrkNomp1pVJX8uQNHAhavLE7qFnHjYD";
+export const DEMP_TOKEN_ADDRESS = DEMP_TOKEN_MINT;
 
 export interface TokenHolding {
   symbol: string;
@@ -83,8 +84,16 @@ const DEMO_SPARKLINE_NEGATIVE: SparklinePoint[] = [
  */
 async function fetchBirdeyePrice(mint: string = DEMP_TOKEN_ADDRESS): Promise<number | null> {
   try {
+    const apiKey = process.env.NEXT_PUBLIC_BIRDEYE_API_KEY;
+    const headers: Record<string, string> = {
+      Accept: "application/json",
+      "x-chain": "solana",
+    };
+    if (apiKey) {
+      headers["X-API-KEY"] = apiKey;
+    }
     const res = await fetch(`https://public-api.birdeye.so/defi/price?address=${mint}`, {
-      headers: { Accept: "application/json" },
+      headers,
     });
     if (res.ok) {
       const data = await res.json();

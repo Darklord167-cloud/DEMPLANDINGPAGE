@@ -29,15 +29,21 @@ export function triggerJupiterDirectSwap(options?: SwapRouteOptions): void {
 /**
  * Initializer helper for Jupiter Terminal Script Widget.
  */
-export function initJupiterTerminalWidget(targetElementId: string = "jupiter-terminal", outputMint: string = DEMP_TOKEN_MINT): boolean {
+export function initJupiterTerminalWidget(
+  targetElementId: string = "jupiter-terminal", 
+  outputMint: string = DEMP_TOKEN_MINT,
+  inputMint: string = USDC_TOKEN_MINT
+): boolean {
   if (typeof window !== "undefined" && window.Jupiter) {
     try {
+      const endpoint = typeof window !== "undefined" ? `${window.location.origin}/api/rpc` : undefined;
       window.Jupiter.init({
         displayMode: "integrated",
         integratedTargetId: targetElementId,
         strictTokenList: false,
+        endpoint,
         formProps: {
-          initialInputMint: USDC_TOKEN_MINT,
+          initialInputMint: inputMint,
           initialOutputMint: outputMint,
         },
         theme: "dark",

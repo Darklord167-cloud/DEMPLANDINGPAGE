@@ -19,9 +19,9 @@ describe('Telegram Bot Webhook & Commands API Route', () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.status).toBe('online');
-    expect(json.bot).toBe('@DarkEmpireGemeniBot');
-    expect(json.commandsCount).toBe(8);
-    expect(json.commands).toHaveLength(8);
+    expect(json.bot).toBe('@DarkEmpireRelayBot');
+    expect(json.commandsCount).toBe(13);
+    expect(json.commands).toHaveLength(13);
   });
 
   it('should process /start command', async () => {
@@ -83,7 +83,7 @@ describe('Telegram Bot Webhook & Commands API Route', () => {
     expect(mockFetch).toHaveBeenCalledWith(
       expect.stringContaining('sendMessage'),
       expect.objectContaining({
-        body: expect.stringContaining('DARK EMPIRE BOT & WEBHOOK DOCUMENTATION')
+        body: expect.stringContaining('DARK EMPIRE BOT & WEBHOOK DIRECTIVES')
       })
     );
   });
@@ -114,7 +114,7 @@ describe('Telegram Bot Webhook & Commands API Route', () => {
     expect(mockFetch).toHaveBeenCalledWith(
       expect.stringContaining('sendMessage'),
       expect.objectContaining({
-        body: expect.stringContaining('DARK EMPIRE OPERATIONAL STATUS')
+        body: expect.stringContaining('DARK EMPIRE SYSTEM HEALTH & UPTIME')
       })
     );
   });
@@ -147,6 +147,99 @@ describe('Telegram Bot Webhook & Commands API Route', () => {
     expect(json.ok).toBe(true);
   });
 
+  it('should process /trade command', async () => {
+    process.env.TELEGRAM_BOT_TOKEN = 'mock-telegram-token';
+
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true, result: {} }), { status: 200 })
+    );
+    vi.stubGlobal('fetch', mockFetch);
+
+    const req = new Request('http://localhost/api/telegram/webhook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: {
+          chat: { id: 12345678 },
+          text: '/trade'
+        }
+      })
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('sendMessage'),
+      expect.objectContaining({
+        body: expect.stringContaining('EXECUTE TRADES VIA AI ENGINE')
+      })
+    );
+  });
+
+  it('should process /balance command', async () => {
+    process.env.TELEGRAM_BOT_TOKEN = 'mock-telegram-token';
+
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true, result: {} }), { status: 200 })
+    );
+    vi.stubGlobal('fetch', mockFetch);
+
+    const req = new Request('http://localhost/api/telegram/webhook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: {
+          chat: { id: 12345678 },
+          text: '/balance'
+        }
+      })
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('sendMessage'),
+      expect.objectContaining({
+        body: expect.stringContaining('LIVE PORTFOLIO BALANCES')
+      })
+    );
+  });
+
+  it('should process /bots command', async () => {
+    process.env.TELEGRAM_BOT_TOKEN = 'mock-telegram-token';
+
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true, result: {} }), { status: 200 })
+    );
+    vi.stubGlobal('fetch', mockFetch);
+
+    const req = new Request('http://localhost/api/telegram/webhook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: {
+          chat: { id: 12345678 },
+          text: '/bots'
+        }
+      })
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('sendMessage'),
+      expect.objectContaining({
+        body: expect.stringContaining('ACTIVE AUTOMATED TRADING BOTS')
+      })
+    );
+  });
+
   it('should call setMyCommands when setup-commands is invoked', async () => {
     process.env.TELEGRAM_BOT_TOKEN = 'mock-telegram-token';
 
@@ -160,6 +253,6 @@ describe('Telegram Bot Webhook & Commands API Route', () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.success).toBe(true);
-    expect(json.bot).toBe('@DarkEmpireGemeniBot');
+    expect(json.bot).toBe('@DarkEmpireRelayBot');
   });
 });

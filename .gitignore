@@ -10,3 +10,4 @@ coverage/
 deployer.json
 solana-release*
 *.tar.bz2
+.vercel

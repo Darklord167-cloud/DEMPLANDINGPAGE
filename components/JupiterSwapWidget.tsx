@@ -4,12 +4,14 @@ import { useState, useEffect } from "react";
 import Script from "next/script";
 import { Loader2, ArrowLeftRight, ExternalLink, Copy, CheckCircle, ShieldCheck, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DEMP_TOKEN_MINT, USDC_TOKEN_MINT, SOL_TOKEN_MINT } from "@/lib/solana/config";
 
 export function JupiterSwapWidget() {
   const [loading, setLoading] = useState(true);
   const [showFallback, setShowFallback] = useState(false);
   const [copied, setCopied] = useState(false);
-  const contractAddress = "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
+  const [inputToken, setInputToken] = useState<"USDC" | "SOL">("SOL");
+  const contractAddress = DEMP_TOKEN_MINT;
 
   // Fallback trigger after 4s if widget initialization takes longer
   useEffect(() => {
@@ -28,12 +30,14 @@ export function JupiterSwapWidget() {
   const handleJupiterInit = () => {
     if (window.Jupiter) {
       try {
+        const endpoint = typeof window !== "undefined" ? `${window.location.origin}/api/rpc` : undefined;
         window.Jupiter.init({
           displayMode: "integrated",
           integratedTargetId: "jupiter-terminal",
           strictTokenList: false,
+          endpoint,
           formProps: {
-            initialInputMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // USDC
+            initialInputMint: inputToken === "SOL" ? SOL_TOKEN_MINT : USDC_TOKEN_MINT,
             initialOutputMint: contractAddress, // $DEMP
           },
           theme: "dark",
@@ -104,6 +108,41 @@ export function JupiterSwapWidget() {
               <p className="text-zinc-400 text-sm leading-relaxed mb-6">
                 Swap any Solana assets directly into <strong className="text-white font-semibold">$DEMP</strong> using Jupiter&apos;s intelligent routing protocol. Get the best possible rates across Raydium, Meteora, and Orca pools with instant execution.
               </p>
+
+              {/* Input Token Selector */}
+              <div className="mb-4 flex items-center gap-2">
+                <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider">Pay With:</span>
+                <div className="inline-flex rounded-lg border border-zinc-800 bg-zinc-950/80 p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInputToken("SOL");
+                      setTimeout(handleJupiterInit, 50);
+                    }}
+                    className={`px-3 py-1 text-xs font-mono rounded-md transition-all ${
+                      inputToken === "SOL"
+                        ? "bg-[#b026ff] text-white font-bold shadow-sm"
+                        : "text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    SOL
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInputToken("USDC");
+                      setTimeout(handleJupiterInit, 50);
+                    }}
+                    className={`px-3 py-1 text-xs font-mono rounded-md transition-all ${
+                      inputToken === "USDC"
+                        ? "bg-[#b026ff] text-white font-bold shadow-sm"
+                        : "text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    USDC
+                  </button>
+                </div>
+              </div>
 
               <div className="space-y-4">
                 {/* Contract address display card */}
