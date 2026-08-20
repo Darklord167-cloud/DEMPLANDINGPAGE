@@ -31,6 +31,19 @@ if (typeof window !== "undefined") {
     });
 }
 
-// Export Auth & Firestore instances for component utilization
+import appletConfig from "@/firebase-applet-config.json";
+
+// Initialize Auth
 export const auth: Auth = getAuth(app);
-export const db: Firestore = getFirestore(app);
+
+// Initialize Firestore with specific database ID if provided in config or env
+const firestoreDbId = 
+  process.env.NEXT_PUBLIC_FIREBASE_DATABASE_ID || 
+  (appletConfig && appletConfig.firestoreDatabaseId) || 
+  undefined;
+
+export const db: Firestore = 
+  firestoreDbId && firestoreDbId !== "(default)" 
+    ? getFirestore(app, firestoreDbId) 
+    : getFirestore(app);
+

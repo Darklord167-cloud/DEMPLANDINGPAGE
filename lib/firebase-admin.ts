@@ -54,7 +54,18 @@ function initFirebaseAdmin(): App | null {
   return null;
 }
 
+import appletConfig from "@/firebase-applet-config.json";
+
 const adminApp = initFirebaseAdmin();
 
+const adminDbId = 
+  process.env.FIREBASE_DATABASE_ID || 
+  process.env.NEXT_PUBLIC_FIREBASE_DATABASE_ID || 
+  (appletConfig && appletConfig.firestoreDatabaseId) || 
+  undefined;
+
 export const adminAuth: Auth | null = adminApp ? getAuth(adminApp) : null;
-export const adminDb: Firestore | null = adminApp ? getFirestore(adminApp) : null;
+export const adminDb: Firestore | null = adminApp 
+  ? (adminDbId && adminDbId !== "(default)" ? getFirestore(adminApp, adminDbId) : getFirestore(adminApp)) 
+  : null;
+
