@@ -102,7 +102,48 @@ export async function POST(req: Request) {
       }
     }
 
-    // 4. Resend / External Email relay if configured
+    // 4. Brevo Transactional Email relay if configured
+    const brevoApiKey = process.env.BREVO_API_KEY;
+    if (brevoApiKey) {
+      try {
+        const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_FROM || "darklord@darkempirelords.com";
+        const senderName = process.env.BREVO_SENDER_NAME || "Dark Empire Lords HQ";
+        const recipientEmail = process.env.BREVO_RECIPIENT_EMAIL || process.env.EMAIL_TO || "angelcarmona167@gmail.com";
+
+        await fetch("https://api.brevo.com/v3/smtp/email", {
+          method: "POST",
+          headers: {
+            "api-key": brevoApiKey,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+          body: JSON.stringify({
+            sender: { name: senderName, email: senderEmail },
+            to: [{ email: recipientEmail, name: "Dark Empire Admin" }],
+            replyTo: { email: data.email, name: data.name },
+            subject: `[Contact Form] ${data.subject}`,
+            htmlContent: `
+              <div style="font-family: Arial, sans-serif; background-color: #09090b; color: #f4f4f5; padding: 24px; border-radius: 12px; border: 1px solid #3f3f46;">
+                <h2 style="color: #a855f7; margin-bottom: 16px;">📩 New Dark Empire Contact Submission</h2>
+                <p><strong>From:</strong> ${data.name} (&lt;<a href="mailto:${data.email}" style="color: #c084fc;">${data.email}</a>&gt;)</p>
+                <p><strong>Subject:</strong> ${data.subject}</p>
+                <hr style="border: 0; border-top: 1px solid #27272a; margin: 16px 0;" />
+                <div style="background-color: #18181b; padding: 16px; border-radius: 8px; border: 1px solid #27272a;">
+                  <p style="white-space: pre-wrap; margin: 0;">${data.message}</p>
+                </div>
+                <p style="font-size: 12px; color: #71717a; margin-top: 20px;">Sent from darkempirelords.com contact portal.</p>
+              </div>
+            `,
+            textContent: `From: ${data.name} (${data.email})\nSubject: ${data.subject}\n\nMessage:\n${data.message}`,
+          }),
+        });
+        console.log("[Contact API] Relayed message via Brevo transactional email API");
+      } catch (brevoErr) {
+        console.error("[Contact API] Brevo email relay failed:", brevoErr);
+      }
+    }
+
+    // 5. Resend / External Email relay if configured
     const resendApiKey = process.env.RESEND_API_KEY;
     if (resendApiKey) {
       try {
