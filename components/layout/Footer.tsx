@@ -62,20 +62,20 @@ export function Footer() {
               </span>
             </div>
             <p className="text-muted-foreground max-w-sm mb-8 text-lg">
-              The central command for next-generation digital sovereignty, powering the ecosystem with $DEMP.
+              The central command for next-generation digital sovereignty, powering the multi-chain ecosystem across Solana and Ethereum.
             </p>
-            <div className="flex flex-wrap gap-4">
-              <Button asChild className="bg-primary hover:bg-primary/80 text-white font-bold tracking-wider shadow-[0_0_20px_-5px_var(--color-primary)] border border-primary/50">
-                <a href="https://darkempirelords.com" target="_blank" rel="noopener noreferrer">
-                  <Globe className="mr-2 h-4 w-4" /> OFFICIAL WEBSITE
+            <div className="flex flex-wrap gap-3">
+              <Button asChild className="bg-primary hover:bg-primary/80 text-white font-bold tracking-wider shadow-[0_0_20px_-5px_var(--color-primary)] border border-primary/50 text-xs">
+                <a href="https://token-trace-lemon.vercel.app" target="_blank" rel="noopener noreferrer">
+                  <Shield className="mr-1.5 h-3.5 w-3.5" /> TOKEN TRACE DAPP
                 </a>
               </Button>
-              <Button asChild variant="outline" className="border-primary/50 text-amber-400 hover:bg-amber-400/20 hover:text-amber-300 font-bold tracking-wider">
-                <a href="https://dark-empire-operations-terminal.vercel.app" target="_blank" rel="noopener noreferrer">
+              <Button asChild variant="outline" className="border-amber-500/50 text-amber-400 hover:bg-amber-400/20 hover:text-amber-300 font-bold tracking-wider text-xs">
+                <a href="https://darkempiretradingterminal-dark-empire-lords.vercel.app" target="_blank" rel="noopener noreferrer">
                   TRADING ENGINE
                 </a>
               </Button>
-              <Button asChild variant="outline" className="border-primary/50 text-primary hover:bg-primary/20 hover:text-white font-bold tracking-wider">
+              <Button asChild variant="outline" className="border-primary/50 text-primary hover:bg-primary/20 hover:text-white font-bold tracking-wider text-xs">
                 <a href="/whitepaper">
                   WHITEPAPER
                 </a>

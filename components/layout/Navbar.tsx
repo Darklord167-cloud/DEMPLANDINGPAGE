@@ -60,19 +60,20 @@ export function Navbar() {
   // Secondary links collapsed into "MORE" dropdown
   const secondaryCategories = [
     {
-      title: "Protocol & Architecture",
+      title: "Decentralized Apps & Tools",
       items: [
-        { name: "VIP HQ", href: "/vip", icon: Award },
-        { name: "Empire Holdings", href: "/holdings", icon: Shield },
-        { name: "Features Overview", href: "/features", icon: Layers },
-        { name: "System Settings", href: "/settings", icon: SettingsIcon },
+        { name: "TokenTrace dApp (Sepolia)", href: "https://token-trace-lemon.vercel.app", icon: Shield, external: true },
+        { name: "Trading Terminal", href: "https://darkempiretradingterminal-dark-empire-lords.vercel.app", icon: Terminal, external: true },
+        { name: "VIP HQ Portal", href: "/vip", icon: Award },
+        { name: "Empire Holdings", href: "/holdings", icon: Layers },
       ],
     },
     {
-      title: "Community & Support",
+      title: "Protocol & Community",
       items: [
+        { name: "Features Overview", href: "/features", icon: Sparkles },
         { name: "FAQ Knowledge Base", href: "/faq", icon: HelpCircle },
-        { name: "Credits & Team", href: "/credits", icon: Sparkles },
+        { name: "System Settings", href: "/settings", icon: SettingsIcon },
         { name: "Contact HQ", href: "/contact", icon: Mail },
       ],
     },
@@ -150,6 +151,27 @@ export function Navbar() {
                   {cat.items.map((item) => {
                     const ItemIcon = item.icon;
                     const isActive = pathname === item.href;
+                    const isExternal = "external" in item && item.external;
+
+                    if (isExternal) {
+                      return (
+                        <DropdownMenuItem key={item.name} asChild>
+                          <a
+                            href={item.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-between gap-2.5 px-2.5 py-2 text-xs font-mono rounded-xl transition-colors cursor-pointer text-zinc-300 hover:text-white hover:bg-purple-950/40"
+                          >
+                            <div className="flex items-center gap-2">
+                              <ItemIcon className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                              <span>{item.name}</span>
+                            </div>
+                            <ExternalLink className="w-3 h-3 text-zinc-500 shrink-0" />
+                          </a>
+                        </DropdownMenuItem>
+                      );
+                    }
+
                     return (
                       <DropdownMenuItem key={item.name} asChild>
                         <Link
@@ -342,6 +364,27 @@ export function Navbar() {
                       {cat.items.map((item) => {
                         const ItemIcon = item.icon;
                         const isActive = pathname === item.href;
+                        const isExternal = "external" in item && item.external;
+
+                        if (isExternal) {
+                          return (
+                            <a
+                              key={item.name}
+                              href={item.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => setIsOpen(false)}
+                              className="flex items-center justify-between py-2.5 px-3 text-xs font-mono rounded-xl border transition-colors min-h-[44px] text-zinc-300 border-zinc-900 bg-zinc-950/60 hover:text-white"
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <ItemIcon className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                                <span>{item.name}</span>
+                              </div>
+                              <ExternalLink className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                            </a>
+                          );
+                        }
+
                         return (
                           <Link
                             key={item.name}
