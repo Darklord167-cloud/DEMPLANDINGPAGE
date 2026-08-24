@@ -249,6 +249,44 @@ export function TokenInfo() {
                 </div>
               </div>
             </div>
+
+            {/* EMBEDDED TOKENTRACE DAPP VIEWER */}
+            <div className="rounded-2xl border border-primary/30 bg-zinc-950/80 backdrop-blur-xl overflow-hidden shadow-[0_0_30px_rgba(168,85,247,0.15)]">
+              <div className="bg-zinc-900/90 px-6 py-4 border-b border-primary/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/20 border border-primary/40 text-primary">
+                    <Shield className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h5 className="font-heading font-bold text-white text-base flex items-center gap-2">
+                      TOKENTRACE INTERFACE // SEPOLIA TESTNET
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        LIVE DAPP
+                      </span>
+                    </h5>
+                    <p className="text-xs font-mono text-muted-foreground">
+                      DarkCoin governance console, staking telemetry &amp; proposal voting
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button asChild size="sm" variant="outline" className="border-primary/40 text-white hover:bg-primary/20 text-xs font-mono">
+                    <a href={EVM_DARKCOIN_CONFIG.tokentraceDappUrl} target="_blank" rel="noopener noreferrer">
+                      Open Full Screen <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+                    </a>
+                  </Button>
+                </div>
+              </div>
+              <div className="relative w-full h-[650px] bg-black">
+                <iframe
+                  src={EVM_DARKCOIN_CONFIG.tokentraceDappUrl}
+                  title="TokenTrace DApp Console"
+                  className="w-full h-full border-0"
+                  allow="clipboard-write; ethereum"
+                  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                />
+              </div>
+            </div>
           </motion.div>
         )}
 
