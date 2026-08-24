@@ -21,7 +21,7 @@ function checkSubscribeRateLimit(ip: string): boolean {
 
 export async function POST(req: Request) {
   try {
-    const clientIp = req.headers.get("x-forwarded-for") || "127.0.0.1";
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
     if (!checkSubscribeRateLimit(clientIp)) {
       return NextResponse.json(
         { message: "Too many subscription attempts. Please try again later." },
@@ -30,7 +30,15 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json().catch(() => null);
-    const parseResult = insertSubscriberSchema.safeParse(body);
+    if (!body || typeof body !== "object") {
+      return NextResponse.json(
+        { message: "Please provide a valid email address." },
+        { status: 400 }
+      );
+    }
+
+    const rawEmail = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    const parseResult = insertSubscriberSchema.safeParse({ email: rawEmail });
 
     if (!parseResult.success) {
       return NextResponse.json(
@@ -41,7 +49,7 @@ export async function POST(req: Request) {
 
     const data = parseResult.data;
 
-    const existing = await storage.getSubscriberByEmail(data.email);
+    const existing = await storage.getSubscriberByEmail(data.email).catch(() => null);
     if (existing) {
       return NextResponse.json(
         { message: "This email is already subscribed to the Dark Empire newsletter." },

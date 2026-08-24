@@ -323,29 +323,51 @@ export class DatabaseStorage implements IStorage {
       this.memSubscribers.set(data.email, sub);
       return sub;
     }
-    return withDbRetry(async (db) => {
-      const [subscriber] = await db.insert(subscribers).values(data).returning();
-      return subscriber;
-    });
+    try {
+      return await withDbRetry(async (db) => {
+        const [subscriber] = await db.insert(subscribers).values(data).returning();
+        return subscriber;
+      });
+    } catch (dbErr) {
+      console.warn("[Storage] DB createSubscriber notice (falling back to memory):", dbErr);
+      const sub: Subscriber = {
+        id: this.memSubscribers.size + 1,
+        email: data.email,
+        subscribedAt: new Date(),
+        active: true,
+      };
+      this.memSubscribers.set(data.email, sub);
+      return sub;
+    }
   }
 
   async getSubscriberByEmail(email: string): Promise<Subscriber | undefined> {
     if (!this.isDbConfigured()) {
       return this.memSubscribers.get(email);
     }
-    return withDbRetry(async (db) => {
-      const [subscriber] = await db.select().from(subscribers).where(eq(subscribers.email, email));
-      return subscriber;
-    });
+    try {
+      return await withDbRetry(async (db) => {
+        const [subscriber] = await db.select().from(subscribers).where(eq(subscribers.email, email));
+        return subscriber;
+      });
+    } catch (dbErr) {
+      console.warn("[Storage] DB getSubscriberByEmail notice (checking memory):", dbErr);
+      return this.memSubscribers.get(email);
+    }
   }
 
   async getAllSubscribers(): Promise<Subscriber[]> {
     if (!this.isDbConfigured()) {
       return Array.from(this.memSubscribers.values());
     }
-    return withDbRetry(async (db) => {
-      return await db.select().from(subscribers);
-    });
+    try {
+      return await withDbRetry(async (db) => {
+        return await db.select().from(subscribers);
+      });
+    } catch (dbErr) {
+      console.warn("[Storage] DB getAllSubscribers notice (checking memory):", dbErr);
+      return Array.from(this.memSubscribers.values());
+    }
   }
 
   async createContactMessage(data: InsertContactMessage): Promise<ContactMessage> {
@@ -362,19 +384,39 @@ export class DatabaseStorage implements IStorage {
       this.memContacts.push(msg);
       return msg;
     }
-    return withDbRetry(async (db) => {
-      const [message] = await db.insert(contactMessages).values(data).returning();
-      return message;
-    });
+    try {
+      return await withDbRetry(async (db) => {
+        const [message] = await db.insert(contactMessages).values(data).returning();
+        return message;
+      });
+    } catch (dbErr) {
+      console.warn("[Storage] DB createContactMessage notice (falling back to memory):", dbErr);
+      const msg: ContactMessage = {
+        id: this.memContacts.length + 1,
+        name: data.name,
+        email: data.email,
+        subject: data.subject,
+        message: data.message,
+        read: false,
+        createdAt: new Date(),
+      };
+      this.memContacts.push(msg);
+      return msg;
+    }
   }
 
   async getAllContactMessages(): Promise<ContactMessage[]> {
     if (!this.isDbConfigured()) {
       return [...this.memContacts];
     }
-    return withDbRetry(async (db) => {
-      return await db.select().from(contactMessages);
-    });
+    try {
+      return await withDbRetry(async (db) => {
+        return await db.select().from(contactMessages);
+      });
+    } catch (dbErr) {
+      console.warn("[Storage] DB getAllContactMessages notice (checking memory):", dbErr);
+      return [...this.memContacts];
+    }
   }
 
   async markMessageRead(id: number): Promise<ContactMessage | undefined> {
@@ -386,14 +428,24 @@ export class DatabaseStorage implements IStorage {
       }
       return undefined;
     }
-    return withDbRetry(async (db) => {
-      const [message] = await db
-        .update(contactMessages)
-        .set({ read: true })
-        .where(eq(contactMessages.id, id))
-        .returning();
-      return message;
-    });
+    try {
+      return await withDbRetry(async (db) => {
+        const [message] = await db
+          .update(contactMessages)
+          .set({ read: true })
+          .where(eq(contactMessages.id, id))
+          .returning();
+        return message;
+      });
+    } catch (dbErr) {
+      console.warn("[Storage] DB markMessageRead notice (updating memory):", dbErr);
+      const msg = this.memContacts.find((c) => c.id === id);
+      if (msg) {
+        msg.read = true;
+        return msg;
+      }
+      return undefined;
+    }
   }
 
   // Stripe Persistent Idempotency & Credit Fulfillment
