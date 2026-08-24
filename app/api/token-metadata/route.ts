@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
-import { DEMP_TOKEN_MINT, DEMP_DEPLOYER_WALLET } from "@/lib/solana/config";
+import { DEMP_TOKEN_MINT, DEMP_DEPLOYER_WALLET, CANONICAL_SITE_URL } from "@/lib/config/public";
 
-export async function GET(request: Request) {
-  const host = request.headers.get("host") || "darkempirelords.com";
-  const protocol = host.includes("localhost") ? "http" : "https";
-  const baseUrl = `${protocol}://${host}`;
+export async function GET() {
+  const baseUrl = CANONICAL_SITE_URL;
 
   const metadata = {
     name: "Dark Empire",

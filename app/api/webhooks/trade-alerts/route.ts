@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-
-const DEMP_TOKEN_MINT = '8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx';
+import { DEMP_TOKEN_MINT } from '@/lib/config/public';
 
 interface HeliusTokenTransfer {
   userAccount?: string;
@@ -60,18 +59,44 @@ interface TradePayload {
   seller?: string;
   priceUsd?: number;
   price?: number;
-  chat_id?: string;
+}
+
+// In-memory sliding deduplication cache (10 min TTL)
+const recentSignatures = new Map<string, number>();
+const DEDUP_TTL_MS = 10 * 60 * 1000;
+
+function isDuplicateTx(sig: string): boolean {
+  if (!sig) return false;
+  const now = Date.now();
+
+  // Cleanup old entries
+  for (const [key, timestamp] of recentSignatures.entries()) {
+    if (now - timestamp > DEDUP_TTL_MS) {
+      recentSignatures.delete(key);
+    }
+  }
+
+  if (recentSignatures.has(sig)) {
+    return true;
+  }
+
+  recentSignatures.set(sig, now);
+  return false;
 }
 
 export async function POST(req: Request) {
   try {
     // 1. Security Authorization Validation
-    const relaySecretKey = process.env.RELAY_SECRET_KEY;
-    const authHeader = req.headers.get('authorization') || req.headers.get('x-relay-secret-key') || req.headers.get('x-secret-key');
+    const expectedSecret = process.env.TRADE_ALERTS_SECRET || process.env.RELAY_SECRET_KEY;
+    const authHeader =
+      req.headers.get('authorization') ||
+      req.headers.get('x-relay-secret-key') ||
+      req.headers.get('x-secret-key');
 
-    if (relaySecretKey) {
-      const isValidAuth = authHeader === relaySecretKey || authHeader === `Bearer ${relaySecretKey}`;
+    if (expectedSecret) {
+      const isValidAuth = authHeader === expectedSecret || authHeader === `Bearer ${expectedSecret}`;
       if (!isValidAuth) {
+        console.warn("[Trade Alerts Webhook] Unauthorized trade alert submission rejected.");
         return NextResponse.json(
           { error: 'Unauthorized: Invalid or missing authorization secret' },
           { status: 401 }
@@ -79,13 +104,11 @@ export async function POST(req: Request) {
       }
     }
 
-    // 2. Parse Incoming Payload (Supports Helius Enhanced Webhook array format & direct object payloads)
+    // 2. Parse Incoming Payload (Supports Helius Enhanced Webhooks & direct object payloads)
     const body = await req.json().catch(() => ({}));
     let rawTrade: TradePayload = {};
 
     if (Array.isArray(body)) {
-      // Helius sends an array of EnhancedTransaction objects.
-      // Extract the first transaction where type === "SWAP"
       const swapTx = body.find(
         (tx: any) =>
           tx &&
@@ -107,6 +130,19 @@ export async function POST(req: Request) {
       }
     }
 
+    const signature =
+      rawTrade.signature ||
+      rawTrade.txSignature ||
+      rawTrade.txHash ||
+      rawTrade.txId ||
+      '';
+
+    // Check deduplication
+    if (signature && isDuplicateTx(signature)) {
+      console.log(`[Trade Alerts Webhook] Duplicate transaction signature ${signature} ignored.`);
+      return NextResponse.json({ success: true, duplicate: true, alerted: false });
+    }
+
     // 3. Extract Helius events.swap if present
     const swapEvent = rawTrade.events?.swap || rawTrade.events?.SWAP || rawTrade.swap;
 
@@ -115,9 +151,6 @@ export async function POST(req: Request) {
     let derivedAmountUsd: number | undefined;
 
     if (swapEvent) {
-      // Determine BUY vs SELL based on $DEMP direction in events.swap:
-      // If $DEMP is in tokenOutputs (going TO the user), it's a BUY.
-      // If $DEMP is in tokenInputs (going FROM the user to the pool), it's a SELL.
       const dempOutput = swapEvent.tokenOutputs?.find(
         (t) => t.mint === DEMP_TOKEN_MINT || t.symbol === '$DEMP' || t.symbol === 'DEMP'
       );
@@ -162,13 +195,13 @@ export async function POST(req: Request) {
 
     const amountUsd = Number(rawAmountUsd || 0);
 
-    // 5. Webhook Threshold Check (> $1,000 USD)
+    // 5. Webhook Threshold Check (> $1,000 USD for Whale Alerts)
     if (amountUsd <= 1000) {
       return NextResponse.json(
         {
           success: true,
           alerted: false,
-          reason: 'Trade value is $1,000 USD or below. Whale alert threshold not met.',
+          reason: 'Trade value is below $1,000 USD whale threshold.',
           amountUsd,
         },
         { status: 200 }
@@ -195,13 +228,6 @@ export async function POST(req: Request) {
       rawTrade.buyer ||
       rawTrade.seller ||
       'Unknown';
-
-    const signature =
-      rawTrade.signature ||
-      rawTrade.txSignature ||
-      rawTrade.txHash ||
-      rawTrade.txId ||
-      '';
 
     let timestamp: string;
     if (typeof rawTrade.timestamp === 'number') {
@@ -235,7 +261,7 @@ export async function POST(req: Request) {
         {
           title: '🚨 WHALE ALERT DETECTED 🚨',
           description: `A high-value transaction of **${formattedUsd}** was executed on the Dark Empire Protocol!`,
-          color: 0xa855f7, // Neon Purple
+          color: 0xa855f7,
           fields: [
             { name: '💵 Value (USD)', value: `**${formattedUsd}**`, inline: true },
             { name: '🔄 Type', value: `**${type}**`, inline: true },
@@ -254,7 +280,7 @@ export async function POST(req: Request) {
 
     // Telegram Payload Formatting
     const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
-    const telegramChatId = process.env.TELEGRAM_CHAT_ID || rawTrade.chat_id || body.chat_id || '8283060638';
+    const telegramChatId = process.env.TELEGRAM_CHAT_ID;
 
     const telegramText = [
       `🚨 *WHALE ALERT DETECTED* 🚨`,
@@ -282,18 +308,18 @@ export async function POST(req: Request) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(discordPayload),
+          signal: AbortSignal.timeout(6000),
         });
         if (!res.ok) {
-          const errText = await res.text();
-          return { relay: 'discord', success: false, error: `Discord HTTP ${res.status}: ${errText}` };
+          return { relay: 'discord', success: false, error: `Discord HTTP ${res.status}` };
         }
         return { relay: 'discord', success: true };
       })(),
 
       // Telegram Relay Handler
       (async () => {
-        if (!telegramBotToken) {
-          return { relay: 'telegram', success: false, error: 'TELEGRAM_BOT_TOKEN is not configured' };
+        if (!telegramBotToken || !telegramChatId) {
+          return { relay: 'telegram', success: false, error: 'TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is not configured' };
         }
         const telegramEndpoint = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
         const res = await fetch(telegramEndpoint, {
@@ -305,6 +331,7 @@ export async function POST(req: Request) {
             parse_mode: 'Markdown',
             disable_web_page_preview: false,
           }),
+          signal: AbortSignal.timeout(6000),
         });
         const data = await res.json();
         if (!res.ok || !data.ok) {
@@ -321,12 +348,12 @@ export async function POST(req: Request) {
     const discordStatus =
       relayResults[0].status === 'fulfilled'
         ? relayResults[0].value
-        : { relay: 'discord', success: false, error: String(relayResults[0].reason) };
+        : { relay: 'discord', success: false, error: 'Relay failure' };
 
     const telegramStatus =
       relayResults[1].status === 'fulfilled'
         ? relayResults[1].value
-        : { relay: 'telegram', success: false, error: String(relayResults[1].reason) };
+        : { relay: 'telegram', success: false, error: 'Relay failure' };
 
     return NextResponse.json(
       {
@@ -350,11 +377,10 @@ export async function POST(req: Request) {
       { status: 200 }
     );
   } catch (error: any) {
-    console.error('[Trade Alerts Webhook Error]:', error);
+    console.error('[Trade Alerts Webhook Internal Error]:', error);
     return NextResponse.json(
-      { error: error.message || 'Internal server error processing trade alert webhook' },
+      { error: 'Internal server error processing trade alert webhook' },
       { status: 500 }
     );
   }
 }
-

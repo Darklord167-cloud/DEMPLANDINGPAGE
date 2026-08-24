@@ -7,10 +7,10 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-import { DEMP_SUPPLY_ENDPOINT } from "@/lib/solana/config";
+import { DEMP_TOKEN_MINT, SOLSCAN_TOKEN_URL, DEMP_SUPPLY_ENDPOINT } from "@/lib/config/public";
 
-const CONTRACT = "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
-const SOLSCAN_URL = `https://solscan.io/token/${CONTRACT}`;
+const CONTRACT = DEMP_TOKEN_MINT;
+const SOLSCAN_URL = SOLSCAN_TOKEN_URL;
 const SUPPLY_ENDPOINT = DEMP_SUPPLY_ENDPOINT;
 
 interface FaqItem {

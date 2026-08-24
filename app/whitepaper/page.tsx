@@ -20,10 +20,12 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
+import { DEMP_TOKEN_MINT } from "@/lib/config/public";
+
 export default function WhitepaperPage() {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
-  const contractAddress = "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
+  const contractAddress = DEMP_TOKEN_MINT;
 
   const handleCopyContract = () => {
     navigator.clipboard.writeText(contractAddress);

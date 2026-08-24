@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
-// 1. Initialize the client securely on the server using the private environment variable
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
 // Sliding window rate limiter
 const chatRateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
@@ -29,7 +26,7 @@ function checkChatRateLimit(ip: string): { allowed: boolean; retryAfterSec?: num
 
 export async function POST(req: Request) {
   try {
-    const clientIp = req.headers.get("x-forwarded-for") || "client-local";
+    const clientIp = req.headers.get("x-forwarded-for") || "127.0.0.1";
     const rateLimit = checkChatRateLimit(clientIp);
 
     if (!rateLimit.allowed) {
@@ -39,19 +36,30 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Parse the incoming message, chat history, model preference, portfolio context, and optional image
-    const { message, history, modelPreference, portfolioContext, imageBase64 } = await req.json();
-
-    if (!message) {
-      return NextResponse.json({ error: "Message is required" }, { status: 400 });
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    if (!apiKey) {
+      console.warn("[Oracle Chat API] GEMINI_API_KEY / GOOGLE_API_KEY is not configured.");
+      return NextResponse.json(
+        { error: "Oracle Mind Matrix is currently in standby. API key configuration required on server." },
+        { status: 503 }
+      );
     }
 
+    // 2. Parse the incoming message, chat history, model preference, portfolio context, and optional image
+    const body = await req.json().catch(() => null);
+    if (!body || !body.message) {
+      return NextResponse.json({ error: "Message content is required" }, { status: 400 });
+    }
+
+    const { message, history, modelPreference, portfolioContext, imageBase64 } = body;
     const selectedModel = modelPreference === "pro" ? "gemini-2.5-pro" : "gemini-2.5-flash";
 
     let contextPrompt = "";
     if (portfolioContext) {
       contextPrompt = `\n\n[USER CONNECTED PORTFOLIO CONTEXT: Wallet Address: ${portfolioContext.walletAddress || "N/A"}, DEMP Balance: ${portfolioContext.dempBalance || 0}, VIP Tier: ${portfolioContext.vipTier || "none"}]`;
     }
+
+    const ai = new GoogleGenAI({ apiKey });
 
     // 3. Initialize the chat with user's conversation history and system instructions
     const chat = ai.chats.create({
@@ -86,7 +94,7 @@ RESPONSE STRUCTURE:
     }
 
     const result = await chat.sendMessage({ message: sendPayload });
-    const responseText = result.text;
+    const responseText = result.text || "Oracle neural matrix returned empty output.";
 
     // 5. Return the secure response to the client
     return NextResponse.json({ 
@@ -95,9 +103,9 @@ RESPONSE STRUCTURE:
     });
     
   } catch (error: any) {
-    console.error("Oracle Chat Error:", error);
+    console.error("[Oracle Chat API Internal Error]:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to communicate with Oracle." },
+      { error: "Failed to communicate with Oracle neural matrix. Please try again shortly." },
       { status: 500 }
     );
   }

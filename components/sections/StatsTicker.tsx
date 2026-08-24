@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { DEMP_TOKEN_MINT } from "@/lib/config/public";
 
 interface BirdeyeData {
   data?: {
@@ -17,7 +18,7 @@ export function StatsTicker() {
   useEffect(() => {
     const fetchTokenData = async () => {
       try {
-        const address = "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
+        const address = DEMP_TOKEN_MINT;
         const res = await fetch(`/api/birdeye?address=${address}`);
         if (!res.ok) {
            console.error("StatsTicker: API responded with status", res.status);

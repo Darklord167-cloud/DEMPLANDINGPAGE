@@ -4,9 +4,10 @@ import { motion } from "motion/react";
 import { FileText, ArrowRight, ShieldCheck, Cpu, Coins, Lock, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { DEMP_TOKEN_MINT } from "@/lib/config/public";
 
 export function WhitepaperTeaser() {
-  const contractAddress = "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
+  const contractAddress = DEMP_TOKEN_MINT;
 
   const keyPoints = [
     {

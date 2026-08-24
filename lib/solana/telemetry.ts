@@ -1,107 +1,132 @@
-import { DEMP_TOKEN_MINT } from "./config";
+import { DEMP_TOKEN_MINT, DEMP_TOTAL_SUPPLY } from "@/lib/config/public";
 
 export interface TokenTelemetry {
   mint: string;
   symbol: string;
   name: string;
-  priceUsd: number;
-  priceSol: number;
-  priceChange24h: number;
-  volume24h: number;
-  marketCapUsd: number;
-  fdvUsd: number;
-  liquidityUsd: number;
+  priceUsd: number | null;
+  priceSol: number | null;
+  priceChange24h: number | null;
+  volume24h: number | null;
+  marketCapUsd: number | null;
+  fdvUsd: number | null;
+  liquidityUsd: number | null;
   totalSupply: number;
-  holdersCount: number;
+  holdersCount: number | null;
   updatedAt: string;
-  source: "birdeye" | "dexscreener" | "fallback";
+  source: "dexscreener" | "birdeye" | "on-chain" | "unavailable";
+  status: "live" | "delayed" | "syncing" | "unavailable";
 }
 
-/** Fallback default telemetry data when APIs are initializing or rate-limited */
-export const DEFAULT_TELEMETRY: TokenTelemetry = {
+/** Initial unpopulated telemetry state indicating live data query status */
+export const INITIAL_TELEMETRY: TokenTelemetry = {
   mint: DEMP_TOKEN_MINT,
   symbol: "DEMP",
   name: "Dark Empire Token",
-  priceUsd: 0.0485,
-  priceSol: 0.00028,
-  priceChange24h: 12.45,
-  volume24h: 384500,
-  marketCapUsd: 4850000,
-  fdvUsd: 4850000,
-  liquidityUsd: 920000,
-  totalSupply: 100000000,
-  holdersCount: 4250,
+  priceUsd: null,
+  priceSol: null,
+  priceChange24h: null,
+  volume24h: null,
+  marketCapUsd: null,
+  fdvUsd: null,
+  liquidityUsd: null,
+  totalSupply: DEMP_TOTAL_SUPPLY,
+  holdersCount: null,
   updatedAt: new Date().toISOString(),
-  source: "fallback",
+  source: "unavailable",
+  status: "syncing",
 };
 
+/** Alias for backwards compatibility */
+export const DEFAULT_TELEMETRY = INITIAL_TELEMETRY;
+
 /**
- * Fetches real-time $DEMP token telemetry from DEX Screener / BirdEye API.
+ * Fetches verified real-time token telemetry from DEX Screener API.
+ * Never invents mock prices, volume, or holder statistics.
  */
-export async function fetchTokenTelemetry(mintAddress: string = DEMP_TOKEN_MINT): Promise<TokenTelemetry> {
+export async function fetchTokenTelemetry(
+  mintAddress: string = DEMP_TOKEN_MINT
+): Promise<TokenTelemetry> {
   try {
-    // Attempt DexScreener / BirdEye API telemetry lookup
     const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mintAddress}`, {
       headers: { Accept: "application/json" },
       next: { revalidate: 30 },
     });
 
     if (!res.ok) {
-      throw new Error(`DexScreener API error: ${res.status}`);
+      console.warn(`[DexScreener] API returned status ${res.status}`);
+      return {
+        ...INITIAL_TELEMETRY,
+        mint: mintAddress,
+        status: "unavailable",
+      };
     }
 
     const data = await res.json();
     const pairs = data.pairs;
 
-    if (pairs && pairs.length > 0) {
+    if (pairs && Array.isArray(pairs) && pairs.length > 0) {
       const topPair = pairs[0];
-      const priceUsd = parseFloat(topPair.priceUsd) || DEFAULT_TELEMETRY.priceUsd;
-      const priceChange24h = topPair.priceChange?.h24 || DEFAULT_TELEMETRY.priceChange24h;
-      const volume24h = topPair.volume?.h24 || DEFAULT_TELEMETRY.volume24h;
-      const liquidityUsd = topPair.liquidity?.usd || DEFAULT_TELEMETRY.liquidityUsd;
-      const fdvUsd = topPair.fdv || DEFAULT_TELEMETRY.fdvUsd;
-      const marketCapUsd = topPair.marketCap || fdvUsd || DEFAULT_TELEMETRY.marketCapUsd;
+      const priceUsd = topPair.priceUsd ? parseFloat(topPair.priceUsd) : null;
+      const priceSol = topPair.priceNative ? parseFloat(topPair.priceNative) : null;
+      const priceChange24h = topPair.priceChange?.h24 !== undefined ? parseFloat(topPair.priceChange.h24) : null;
+      const volume24h = topPair.volume?.h24 !== undefined ? parseFloat(topPair.volume.h24) : null;
+      const liquidityUsd = topPair.liquidity?.usd !== undefined ? parseFloat(topPair.liquidity.usd) : null;
+      const fdvUsd = topPair.fdv !== undefined ? parseFloat(topPair.fdv) : null;
+      const marketCapUsd = topPair.marketCap !== undefined ? parseFloat(topPair.marketCap) : fdvUsd;
 
       return {
         mint: mintAddress,
         symbol: topPair.baseToken?.symbol || "DEMP",
         name: topPair.baseToken?.name || "Dark Empire Token",
         priceUsd,
-        priceSol: parseFloat(topPair.priceNative) || DEFAULT_TELEMETRY.priceSol,
+        priceSol,
         priceChange24h,
         volume24h,
         marketCapUsd,
         fdvUsd,
         liquidityUsd,
-        totalSupply: DEFAULT_TELEMETRY.totalSupply,
-        holdersCount: DEFAULT_TELEMETRY.holdersCount,
+        totalSupply: DEMP_TOTAL_SUPPLY,
+        holdersCount: null, // Only displayed if verified on-chain via RPC
         updatedAt: new Date().toISOString(),
         source: "dexscreener",
+        status: priceUsd !== null ? "live" : "syncing",
       };
     }
-  } catch (error) {
-    console.warn("Live DEX telemetry fetch fallback:", error);
+  } catch (error: any) {
+    console.warn("[Telemetry] Live DEX telemetry fetch notice:", error?.message || error);
   }
 
-  return DEFAULT_TELEMETRY;
+  return {
+    ...INITIAL_TELEMETRY,
+    mint: mintAddress,
+    status: "unavailable",
+  };
 }
 
 /**
  * Calculates USD holding value based on token balance & live price.
  */
-export function calculateHoldingValueUsd(dempBalance: number, priceUsd: number): number {
+export function calculateHoldingValueUsd(dempBalance: number, priceUsd: number | null): number | null {
+  if (priceUsd === null || isNaN(priceUsd) || priceUsd <= 0) return null;
   return dempBalance * priceUsd;
 }
 
 /**
  * Formats large USD values for display ($4.85M, $920.0K, etc.)
  */
-export function formatUsdValue(value: number): string {
+export function formatUsdValue(value: number | null | undefined): string {
+  if (value === null || value === undefined || isNaN(value)) {
+    return "Awaiting live data";
+  }
   if (value >= 1_000_000) {
     return `$${(value / 1_000_000).toFixed(2)}M`;
   }
   if (value >= 1_000) {
     return `$${(value / 1_000).toFixed(1)}K`;
+  }
+  if (value < 0.01 && value > 0) {
+    return `$${value.toFixed(6)}`;
   }
   return `$${value.toFixed(2)}`;
 }

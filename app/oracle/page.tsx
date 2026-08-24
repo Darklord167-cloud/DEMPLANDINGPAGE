@@ -208,38 +208,42 @@ export default function OraclePage() {
     setLoading(true);
 
     try {
-      // 1. Authenticate the deduction via wallet signature
-      const messageObj = { timestamp: Date.now(), action: "deduct_credits" };
-      const messageStr = JSON.stringify(messageObj);
-      const msgBytes = new TextEncoder().encode(messageStr);
+      // 1. Request cryptographic challenge nonce from server
+      const challengeRes = await fetch("/api/auth/challenge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          walletAddress: publicKey.toBase58(),
+          action: "deduct_credits",
+        }),
+      });
+
+      if (!challengeRes.ok) {
+        const errData = await challengeRes.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to initialize cryptographic authentication challenge.");
+      }
+
+      const challenge = await challengeRes.json();
+      const msgBytes = new TextEncoder().encode(challenge.messageToSign);
       const signatureBytes = await signMessage(msgBytes);
       const signature = bs58.encode(signatureBytes);
 
-      // 2. Deduct credit first
+      // 2. Authorize atomic credit deduction with signed challenge
       const deductRes = await fetch("/api/user/credits/deduct", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           walletAddress: publicKey.toBase58(),
+          amount: 1,
           signature,
-          message: messageStr
+          message: challenge.messageToSign,
+          nonce: challenge.nonce,
         }),
       });
-      
-      const deductText = await deductRes.text();
-      if (deductText.includes("<!doctype html>") || deductText.includes("<html")) {
-        throw new Error("Server is currently initiating environment. Please wait 10 seconds.");
-      }
 
-      let deductData: any;
-      try {
-        deductData = JSON.parse(deductText);
-      } catch (e) {
-        throw new Error("Unexpected server response format.");
-      }
-
-      if (!deductRes.ok) {
-        throw new Error(deductData.message || "Failed to deduct credits");
+      const deductData = await deductRes.json().catch(() => ({}));
+      if (!deductRes.ok || !deductData.success) {
+        throw new Error(deductData.error || "Failed to authenticate credit deduction.");
       }
       
       // Update local profile state with new credit count
@@ -315,7 +319,7 @@ export default function OraclePage() {
           {/* Live DEX Telemetry HUD Pill */}
           <div className="flex items-center gap-2 bg-[#041635]/90 border border-[#00d2ff]/40 px-3.5 py-1.5 rounded-full font-mono text-xs text-white backdrop-blur-md shadow-[0_0_15px_rgba(0,210,255,0.2)]">
             <TrendingUp className="w-3.5 h-3.5 text-[#00d2ff]" />
-            <span>$DEMP ${telemetry.priceUsd.toFixed(4)}</span>
+            <span>$DEMP {telemetry.priceUsd !== null ? `$${telemetry.priceUsd.toFixed(4)}` : "Syncing"}</span>
             <span className="text-[#00d2ff] font-bold">MCAP {formatUsdValue(telemetry.marketCapUsd)}</span>
           </div>
 

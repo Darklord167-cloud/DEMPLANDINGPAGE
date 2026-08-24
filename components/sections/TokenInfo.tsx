@@ -14,7 +14,7 @@ import { EVM_DARKCOIN_CONFIG } from "@/lib/evm/config";
 const SUPPLY_ENDPOINT = DEMP_SUPPLY_ENDPOINT;
 
 export function TokenInfo() {
-  const [activeTab, setActiveTab] = useState<"evm" | "solana">("evm");
+  const [activeTab, setActiveTab] = useState<"evm" | "solana">("solana");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const { toast } = useToast();
   

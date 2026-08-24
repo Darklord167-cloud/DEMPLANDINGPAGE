@@ -71,6 +71,87 @@ export const priceAlerts = pgTable("price_alerts", {
   index("price_alerts_wallet_address_idx").on(table.walletAddress),
 ]);
 
+export const stripeEvents = pgTable("stripe_events", {
+  id: varchar("id").primaryKey(), // Stripe Event ID (evt_...)
+  type: text("type").notNull(),
+  processedAt: timestamp("processed_at").defaultNow().notNull(),
+  sessionId: text("session_id"),
+  walletAddress: text("wallet_address"),
+  creditsAwarded: integer("credits_awarded").default(0).notNull(),
+  amountTotal: integer("amount_total"),
+  currency: text("currency"),
+  status: text("status").default("completed").notNull(),
+});
+
+export const creditLedger = pgTable("credit_ledger", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id"),
+  walletAddress: text("wallet_address").notNull(),
+  action: text("action").notNull(), // 'PURCHASE' | 'DEDUCTION' | 'REFUND' | 'ADMIN_GRANT'
+  amount: integer("amount").notNull(), // Positive for credits awarded, negative for deducted
+  balanceAfter: integer("balance_after").notNull(),
+  stripeSessionId: text("stripe_session_id"),
+  stripeEventId: text("stripe_event_id"),
+  nonce: text("nonce"),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("credit_ledger_wallet_idx").on(table.walletAddress),
+  index("credit_ledger_created_at_idx").on(table.createdAt),
+]);
+
+export const authChallenges = pgTable("auth_challenges", {
+  nonce: varchar("nonce", { length: 64 }).primaryKey(),
+  walletAddress: text("wallet_address").notNull(),
+  action: text("action").notNull(), // 'deduct_credits' | 'vip_verify' | 'login'
+  domain: text("domain").notNull(),
+  issuedAt: timestamp("issued_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  consumed: boolean("consumed").default(false).notNull(),
+  consumedAt: timestamp("consumed_at"),
+}, (table) => [
+  index("auth_challenges_wallet_idx").on(table.walletAddress),
+  index("auth_challenges_expires_idx").on(table.expiresAt),
+]);
+
+export const auditLogs = pgTable("audit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id"),
+  walletAddress: text("wallet_address"),
+  action: text("action").notNull(),
+  details: text("details"),
+  ipAddress: text("ip_address"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("audit_logs_wallet_idx").on(table.walletAddress),
+  index("audit_logs_created_at_idx").on(table.createdAt),
+]);
+
+export const webhookEvents = pgTable("webhook_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  source: text("source").notNull(), // 'telegram' | 'stripe' | 'helius' | 'hq'
+  eventType: text("event_type").notNull(),
+  idempotencyKey: text("idempotency_key").unique().notNull(),
+  status: text("status").default("processed").notNull(),
+  payloadSummary: text("payload_summary"),
+  receivedAt: timestamp("received_at").defaultNow().notNull(),
+}, (table) => [
+  index("webhook_events_idempotency_idx").on(table.idempotencyKey),
+  index("webhook_events_received_at_idx").on(table.receivedAt),
+]);
+
+export const tradingCredentialsMetadata = pgTable("trading_credentials_metadata", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  provider: text("provider").notNull(), // 'solana' | 'okx' | 'btcc' | 'telegram'
+  configured: boolean("configured").default(false).notNull(),
+  maskedIdentifier: text("masked_identifier"),
+  lastRotatedAt: timestamp("last_rotated_at"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("trading_credentials_user_idx").on(table.userId),
+]);
+
 export const insertUserSchema = z.object({
   username: z.string().min(3).max(50),
   password: z.string().nullable().optional(),
@@ -112,6 +193,22 @@ export const insertPriceAlertSchema = z.object({
   condition: z.enum(["ABOVE", "BELOW"]),
 });
 
+export const insertAuditLogSchema = z.object({
+  userId: z.string().optional(),
+  walletAddress: z.string().optional(),
+  action: z.string().min(1),
+  details: z.string().optional(),
+  ipAddress: z.string().optional(),
+});
+
+export const insertWebhookEventSchema = z.object({
+  source: z.string().min(1),
+  eventType: z.string().min(1),
+  idempotencyKey: z.string().min(1),
+  status: z.string().default("processed"),
+  payloadSummary: z.string().optional(),
+});
+
 export type InsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type VipVerification = typeof vipVerifications.$inferSelect;
@@ -124,3 +221,17 @@ export type Watchlist = typeof watchlists.$inferSelect;
 export type InsertWatchlist = typeof watchlists.$inferInsert;
 export type PriceAlert = typeof priceAlerts.$inferSelect;
 export type InsertPriceAlert = typeof priceAlerts.$inferInsert;
+export type StripeEvent = typeof stripeEvents.$inferSelect;
+export type InsertStripeEvent = typeof stripeEvents.$inferInsert;
+export type CreditLedgerEntry = typeof creditLedger.$inferSelect;
+export type InsertCreditLedgerEntry = typeof creditLedger.$inferInsert;
+export type AuthChallenge = typeof authChallenges.$inferSelect;
+export type InsertAuthChallenge = typeof authChallenges.$inferInsert;
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertAuditLog = typeof auditLogs.$inferInsert;
+export type WebhookEvent = typeof webhookEvents.$inferSelect;
+export type InsertWebhookEvent = typeof webhookEvents.$inferInsert;
+export type TradingCredentialsMetadata = typeof tradingCredentialsMetadata.$inferSelect;
+export type InsertTradingCredentialsMetadata = typeof tradingCredentialsMetadata.$inferInsert;
+
+

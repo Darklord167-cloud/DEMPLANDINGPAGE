@@ -1,48 +1,70 @@
 import { NextResponse } from "next/server";
+import { DEMP_TOKEN_MINT } from "@/lib/config/public";
 
+/**
+ * GET /api/birdeye?address=...
+ * Queries Birdeye DeFi API for real-time token overview telemetry.
+ * Returns truthful null data with honest status if unconfigured or offline.
+ */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const address = searchParams.get("address");
+  const address = searchParams.get("address") || DEMP_TOKEN_MINT;
 
-  const fallbackData = {
-    data: {
-      price: 0.0042,
-      mc: 4200000,
-      v24hUSD: 125000,
-      priceChange24h: 3.5
-    }
-  };
+  const apiKey = process.env.BIRDEYE_API_KEY;
 
-  if (!address) {
-    console.warn("No address provided to Birdeye API, returning fallback data");
-    return NextResponse.json(fallbackData);
-  }
-
-  const apiKey = process.env.BIRDEYE_API_KEY || process.env.NEXT_PUBLIC_BIRDEYE_API_KEY;
-  
   if (!apiKey) {
-    console.warn("BIRDEYE_API_KEY is not configured, returning fallback data");
-    return NextResponse.json(fallbackData);
+    return NextResponse.json(
+      {
+        success: false,
+        data: null,
+        status: "unavailable",
+        message: "BIRDEYE_API_KEY is not configured on server.",
+      },
+      { status: 200 }
+    );
   }
 
   try {
-    const response = await fetch(`https://public-api.birdeye.so/defi/token_overview?address=${address}`, {
-      headers: {
-        "X-API-KEY": apiKey,
-        "x-chain": "solana"
-      },
-      next: { revalidate: 60 } // Cache for 60 seconds
-    });
+    const response = await fetch(
+      `https://public-api.birdeye.so/defi/token_overview?address=${address}`,
+      {
+        headers: {
+          "X-API-KEY": apiKey,
+          "x-chain": "solana",
+        },
+        next: { revalidate: 60 },
+      }
+    );
 
     if (!response.ok) {
-      console.warn(`Birdeye API responded with status: ${response.status}. Returning fallback.`);
-      return NextResponse.json(fallbackData);
+      console.warn(`[Birdeye API] Returned status ${response.status} for address ${address}`);
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          status: "unavailable",
+          message: `Birdeye responded with HTTP ${response.status}`,
+        },
+        { status: 200 }
+      );
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
+    const json = await response.json();
+    return NextResponse.json({
+      success: true,
+      data: json.data || null,
+      status: json.data ? "live" : "unavailable",
+    });
   } catch (error: any) {
-    console.error("Birdeye API Error:", error);
-    return NextResponse.json(fallbackData);
+    console.error("[Birdeye API Error]:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        data: null,
+        status: "error",
+        error: error.message || "Failed to query Birdeye API",
+      },
+      { status: 200 }
+    );
   }
 }

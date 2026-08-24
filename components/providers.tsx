@@ -14,7 +14,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { VipProvider } from "@/lib/vip-context";
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  let siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  let siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://darkempirelords.com";
   if (!siteUrl.startsWith("http://") && !siteUrl.startsWith("https://")) {
     siteUrl = `https://${siteUrl}`;
   }

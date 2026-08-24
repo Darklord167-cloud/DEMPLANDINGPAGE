@@ -63,9 +63,8 @@ export async function createSolanaToken(config: TokenConfig, privateKeyString?: 
   } else {
     // Generate temporary new keypair
     deployerKeypair = Keypair.generate();
-    console.log("⚠️ No deployer private key supplied. Generated a new keypair:");
+    console.log("⚠️ No deployer private key supplied. Generated a temporary keypair for session.");
     console.log(`   Address: ${deployerKeypair.publicKey.toBase58()}`);
-    console.log(`   Private Key: ${bs58.encode(deployerKeypair.secretKey)}`);
   }
 
   const endpoint = config.network === "devnet" 

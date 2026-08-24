@@ -1,14 +1,13 @@
 import { MetadataRoute } from 'next';
+import { CANONICAL_SITE_URL } from '@/lib/config/public';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://darkempire.holdings';
-
   return {
     rules: {
       userAgent: '*',
       allow: '/',
       disallow: ['/api/'],
     },
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: `${CANONICAL_SITE_URL}/sitemap.xml`,
   };
 }

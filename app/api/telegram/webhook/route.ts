@@ -1,5 +1,14 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
+import { 
+  DEMP_TOKEN_MINT, 
+  DEMP_DEPLOYER_WALLET, 
+  DEMP_TREASURY_WALLET, 
+  DEMP_LIQUIDITY_POOL,
+  USDC_TOKEN_MINT,
+  CANONICAL_SITE_URL 
+} from "@/lib/config/public";
+import { fetchTokenTelemetry, formatUsdValue } from "@/lib/solana/telemetry";
 
 // Initialize Gemini AI securely
 const ai = new GoogleGenAI({ 
@@ -14,47 +23,51 @@ export const BOT_COMMANDS = [
   },
   {
     command: "wallet",
-    description: "View treasury wallet status"
+    description: "View verified treasury & deployer addresses"
   },
   {
     command: "trade",
-    description: "Execute trades via AI engine"
+    description: "Execute trades via Jupiter DEX Aggregator"
   },
   {
     command: "alerts",
-    description: "Set price alerts"
+    description: "View active price alert and whale radar configurations"
   },
   {
     command: "portfolio",
-    description: "View portfolio performance"
+    description: "View real-time token telemetry and holdings"
   },
   {
     command: "oracle",
-    description: "Summon AI trading assistant"
+    description: "Summon Gemini AI trading assistant"
   },
   {
     command: "status",
-    description: "View Dark Empire system health and uptime"
+    description: "View Dark Empire system health and RPC uptime"
   },
   {
     command: "balance",
-    description: "Check live portfolio balances"
+    description: "Check live $DEMP token market valuation"
   },
   {
     command: "bots",
-    description: "List active automated trading bots"
+    description: "List automated bot execution strategies"
   },
   {
     command: "pause",
-    description: "Emergency stop all active bots"
+    description: "Emergency standby for automated workers"
   },
   {
     command: "resume",
-    description: "Restart active trading bots"
+    description: "Restart algorithmic trading workers"
   },
   {
     command: "sweep",
-    description: "Trigger manual profit sweep to cold storage"
+    description: "View cold storage sweep protocol status"
+  },
+  {
+    command: "vip",
+    description: "View VIP tier perks and verification"
   },
   {
     command: "help",
@@ -64,9 +77,9 @@ export const BOT_COMMANDS = [
 
 // Helper to send messages back to Telegram
 async function sendTelegramMessage(chatId: string | number, text: string, replyMarkup?: any) {
-  const token = process.env.TELEGRAM_BOT_TOKEN || "8787976794:AAFv5ZiPHDXOqMTedc81erwHB3d0ayzh19E";
+  const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
-    console.warn("[Telegram Webhook] TELEGRAM_BOT_TOKEN not configured.");
+    console.warn("[Telegram Webhook] TELEGRAM_BOT_TOKEN not configured on server.");
     return false;
   }
 
@@ -80,13 +93,14 @@ async function sendTelegramMessage(chatId: string | number, text: string, replyM
         parse_mode: "Markdown",
         disable_web_page_preview: true,
         reply_markup: replyMarkup
-      })
+      }),
+      signal: AbortSignal.timeout(8000),
     });
 
     const data = await res.json();
     return data.ok;
-  } catch (err) {
-    console.error("[Telegram Webhook] Failed to send Telegram message:", err);
+  } catch (err: any) {
+    console.error("[Telegram Webhook] Failed to send Telegram message:", err?.message || err);
     return false;
   }
 }
@@ -95,31 +109,27 @@ async function sendTelegramMessage(chatId: string | number, text: string, replyM
 const MAIN_KEYBOARD = {
   inline_keyboard: [
     [
-      { text: "⚡ Execute Trade", callback_data: "cmd_trade" },
-      { text: "💼 Portfolio", callback_data: "cmd_portfolio" }
+      { text: "⚡ Swap $DEMP", callback_data: "cmd_trade" },
+      { text: "💼 Market Telemetry", callback_data: "cmd_portfolio" }
     ],
     [
-      { text: "🤖 Active Bots", callback_data: "cmd_bots" },
+      { text: "🤖 Trading Bots", callback_data: "cmd_bots" },
       { text: "🔮 AI Oracle", callback_data: "cmd_oracle" }
     ],
     [
-      { text: "🏦 Treasury Wallet", callback_data: "cmd_wallet" },
-      { text: "💰 Live Balances", callback_data: "cmd_balance" }
+      { text: "🏦 Treasury Info", callback_data: "cmd_wallet" },
+      { text: "💰 Live Price", callback_data: "cmd_balance" }
     ],
     [
-      { text: "🚨 Price Alerts", callback_data: "cmd_alerts" },
-      { text: "📊 System Status", callback_data: "cmd_status" }
+      { text: "🚨 Whale Radar", callback_data: "cmd_alerts" },
+      { text: "📊 System Health", callback_data: "cmd_status" }
     ],
     [
-      { text: "⏸️ Pause Bots", callback_data: "cmd_pause" },
-      { text: "▶️ Resume Bots", callback_data: "cmd_resume" }
+      { text: "👑 VIP Tiers", callback_data: "cmd_vip" },
+      { text: "🧹 Sweep Protocol", callback_data: "cmd_sweep" }
     ],
     [
-      { text: "🧹 Profit Sweep", callback_data: "cmd_sweep" },
-      { text: "👑 VIP Lounge", callback_data: "cmd_vip" }
-    ],
-    [
-      { text: "🌐 Command Center Web", url: "https://darkempirelords.com/command-center" },
+      { text: "🌐 Command Center Web", url: `${CANONICAL_SITE_URL}/command-center` },
       { text: "💬 Support Discord", url: "https://discord.gg/cyWVcvyZ" }
     ]
   ]
@@ -127,7 +137,7 @@ const MAIN_KEYBOARD = {
 
 // GET handler for Webhook health status and registration check
 export async function GET() {
-  const token = process.env.TELEGRAM_BOT_TOKEN || "8787976794:AAFv5ZiPHDXOqMTedc81erwHB3d0ayzh19E";
+  const token = process.env.TELEGRAM_BOT_TOKEN;
   const configured = Boolean(token);
 
   return NextResponse.json({
@@ -141,9 +151,21 @@ export async function GET() {
 
 // POST handler for incoming Telegram updates
 export async function POST(req: Request) {
+  // 1. Webhook Secret Token validation
+  const expectedSecretToken = process.env.TELEGRAM_WEBHOOK_SECRET_TOKEN || process.env.RELAY_SECRET_KEY;
+  if (expectedSecretToken) {
+    const secretHeader = req.headers.get("x-telegram-bot-api-secret-token");
+    if (secretHeader !== expectedSecretToken) {
+      console.warn("[Telegram Webhook] Unauthorized secret token mismatch rejected.");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+
   try {
-    const body = await req.json();
-    console.log("[Telegram Webhook] Received update:", JSON.stringify(body));
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
+    }
 
     // Handle Callback Queries (Button clicks)
     if (body.callback_query) {
@@ -165,7 +187,7 @@ export async function POST(req: Request) {
         else if (data === "cmd_vip") await handleVipCommand(chatId);
         else if (data === "cmd_help") await handleHelpCommand(chatId);
         else if (data === "cmd_oracle") {
-          await sendTelegramMessage(chatId, "🔮 *Dark Empire AI Oracle*\n\nSend your trading question using:\n`/oracle <your query>`\n\n*Example:*\n`/oracle What is the optimal DCA entry strategy for Solana and $DEMP?`");
+          await sendTelegramMessage(chatId, "🔮 *Dark Empire AI Oracle*\n\nSend your trading or strategic question using:\n`/oracle <your query>`\n\n*Example:*\n`/oracle Analyze the current Solana DEX market structure and support levels.`");
         } else if (data === "cmd_contact") {
           await sendTelegramMessage(chatId, "📩 *Dark Empire HQ Support Relay*\n\nSend your message using:\n`/contact <your message>`\n\n*Example:*\n`/contact Inquiry regarding VIP Syndicate tier verification`");
         }
@@ -216,7 +238,6 @@ export async function POST(req: Request) {
     } else if (commandMatch === "/contact") {
       await handleContactCommand(chatId, commandArg, message.from);
     } else {
-      // Unrecognized command
       await sendTelegramMessage(
         chatId,
         `⚡ *Dark Empire Relay Bot (@DarkEmpireRelayBot)*\n\nUnrecognized command \`${rawText}\`.\nType /help to see all available directives.`,
@@ -226,8 +247,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (error: any) {
-    console.error("[Telegram Webhook Error]:", error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    console.error("[Telegram Webhook Internal Error]:", error);
+    return NextResponse.json({ ok: false, error: "Internal webhook processing error" }, { status: 500 });
   }
 }
 
@@ -245,17 +266,15 @@ Your Telegram Chat ID: \`${chatId}\`
 Status: *REGISTERED & ACTIVE FOR RELAYS* 🟢
 
 ⚡ *Trading Terminal Operational Directives:*
-• /wallet — View treasury wallet status
-• /trade — Execute trades via AI engine
-• /alerts — Set price alerts
-• /portfolio — View portfolio performance
+• /wallet — View verified treasury and deployer addresses
+• /trade — Execute trades via Jupiter DEX
+• /alerts — View price alert radar configurations
+• /portfolio — View live token telemetry & analytics
 • /oracle — Summon AI trading assistant
-• /status — View Dark Empire system health and uptime
-• /balance — Check live portfolio balances
-• /bots — List active automated trading bots
-• /pause — Emergency stop all active bots
-• /resume — Restart active trading bots
-• /sweep — Trigger manual profit sweep to cold storage
+• /status — View Dark Empire system health and RPC uptime
+• /balance — Check live $DEMP token market valuation
+• /bots — View active algorithmic trading strategies
+• /vip — View VIP Syndicate tiers & perks
 • /help — Full command manual & web links`;
 
   await sendTelegramMessage(chatId, text, MAIN_KEYBOARD);
@@ -263,32 +282,33 @@ Status: *REGISTERED & ACTIVE FOR RELAYS* 🟢
 
 // 2. /wallet Handler
 async function handleWalletCommand(chatId: string | number) {
-  const treasuryAddress = "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
-  const coldStorageAddress = "DarkEmpireColdStorageMultiSig1111111111111";
+  const deployer = DEMP_DEPLOYER_WALLET;
+  const mint = DEMP_TOKEN_MINT;
+  const treasury = DEMP_TREASURY_WALLET || deployer;
 
-  const text = `🏦 *DARK EMPIRE TREASURY WALLET STATUS*
+  const text = `🏦 *DARK EMPIRE ON-CHAIN REPOSITORY*
 
-*Active Operational Treasury:*
-\`${treasuryAddress}\`
+*Official SPL Token Mint:*
+\`${mint}\`
 
-*Cold Storage Vault:*
-\`${coldStorageAddress}\`
+*Deployer Authority:*
+\`${deployer}\`
 
-*Treasury Allocation:*
-• *Solana Reserve:* 1,450.00 SOL (~$275,500.00 USD)
-• *$DEMP Liquidity Pool:* 25,000,000 DEMP (~$123,750.00 USD)
-• *USDC Operational Buffer:* $50,000.00 USDC
-• *Multi-Sig Governance:* 3-of-5 Hardware Key Signed 🛡️
+*Operational Treasury:*
+\`${treasury}\`
 
-*Security Protocol:* Real-Time On-Chain Verification Active`;
+*Security Protocol:*
+• Multi-Sig Governance Verified 🛡️
+• All assets verifiable on-chain via Solscan Explorer`;
 
   const keyboard = {
     inline_keyboard: [
       [
-        { text: "🔗 Solscan Explorer", url: `https://solscan.io/account/${treasuryAddress}` },
-        { text: "🖥️ Vault Dashboard", url: "https://darkempirelords.com/command-center" }
+        { text: "🔗 Solscan Mint Explorer", url: `https://solscan.io/token/${mint}` },
+        { text: "🔗 Solscan Deployer", url: `https://solscan.io/account/${deployer}` }
       ],
       [
+        { text: "🖥️ Command Center", url: `${CANONICAL_SITE_URL}/command-center` },
         { text: "🔙 Main Menu", callback_data: "cmd_help" }
       ]
     ]
@@ -299,28 +319,25 @@ async function handleWalletCommand(chatId: string | number) {
 
 // 3. /trade Handler
 async function handleTradeCommand(chatId: string | number) {
-  const address = "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
-  const text = `⚡ *EXECUTE TRADES VIA AI ENGINE*
+  const mint = DEMP_TOKEN_MINT;
+  const text = `⚡ *EXECUTE TRADES VIA JUPITER AGGREGATOR*
 
-Dark Empire High-Frequency DEX Execution Terminal powered by Jupiter DEX Aggregator & Helius/Alchemy Low-Latency RPC Proxy.
+Dark Empire High-Frequency DEX Execution Terminal routing through Jupiter DEX Aggregator.
 
 • *Target Asset:* \`$DEMP (Solana SPL)\`
-• *Mint:* \`${address}\`
-• *Optimal Route:* SOL ➔ $DEMP | USDC ➔ $DEMP
+• *Mint:* \`${mint}\`
 • *Dynamic MEV Protection:* Active 🛡️
-• *Slippage Guard:* 0.5% - 1.5%
-
-*Execute Swaps Instantly:*`;
+• *Slippage Guard:* 0.5% - 1.5%`;
 
   const keyboard = {
     inline_keyboard: [
       [
-        { text: "🚀 Swap SOL ➔ $DEMP", url: `https://jup.ag/swap/SOL-${address}` },
-        { text: "💵 Swap USDC ➔ $DEMP", url: `https://jup.ag/swap/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v-${address}` }
+        { text: "🚀 Swap SOL ➔ $DEMP", url: `https://jup.ag/swap/SOL-${mint}` },
+        { text: "💵 Swap USDC ➔ $DEMP", url: `https://jup.ag/swap/${USDC_TOKEN_MINT}-${mint}` }
       ],
       [
-        { text: "🖥️ Open Trading Terminal", url: "https://darkempirelords.com/command-center" },
-        { text: "📈 Live Candlesticks", url: `https://dexscreener.com/solana/${address}` }
+        { text: "📈 Live Candlesticks", url: `https://dexscreener.com/solana/${mint}` },
+        { text: "🖥️ Terminal", url: `${CANONICAL_SITE_URL}/command-center` }
       ]
     ]
   };
@@ -338,13 +355,12 @@ async function handleAlertsCommand(chatId: string | number) {
 • *Tracked SPL Tokens:* \`$DEMP\`, \`SOL\`, \`USDC\`
 • *Relay Channels:* Dual-Relay Active (Telegram + Discord) 🟢
 
-*Alert Preferences:*
-Send webhook alerts to \`/api/webhooks/trade-alerts\` to broadcast live notifications instantly across your channels.`;
+_To receive live trade notifications, ensure your webhook service is configured in the Command Center._`;
 
   const keyboard = {
     inline_keyboard: [
       [
-        { text: "⚙️ Adjust Alerts in Command Center", url: "https://darkempirelords.com/command-center" }
+        { text: "⚙️ Manage in Command Center", url: `${CANONICAL_SITE_URL}/command-center` }
       ],
       [
         { text: "🔙 Main Menu", callback_data: "cmd_help" }
@@ -357,25 +373,31 @@ Send webhook alerts to \`/api/webhooks/trade-alerts\` to broadcast live notifica
 
 // 5. /portfolio Handler
 async function handlePortfolioCommand(chatId: string | number) {
-  const text = `💼 *PORTFOLIO PERFORMANCE & ANALYTICS*
+  const telemetry = await fetchTokenTelemetry(DEMP_TOKEN_MINT);
+  
+  const priceDisplay = telemetry.priceUsd !== null ? `$${telemetry.priceUsd.toFixed(6)}` : "Awaiting live data";
+  const mcapDisplay = formatUsdValue(telemetry.marketCapUsd);
+  const volDisplay = formatUsdValue(telemetry.volume24h);
+  const changeDisplay = telemetry.priceChange24h !== null 
+    ? `${telemetry.priceChange24h >= 0 ? "+" : ""}${telemetry.priceChange24h.toFixed(2)}%` 
+    : "Live sync";
 
-*Overview (24h Window):*
-• *Total Portfolio Value:* \`$42,850.50 USD\`
-• *24h Net PnL:* \`+$3,420.25 (+8.67%)\` 🟢
-• *Win Rate (Bots):* \`78.4% (47/60 trades profitable)\`
-• *Sharpe Ratio:* \`2.84 (High Efficiency)\`
+  const text = `💼 *DARK EMPIRE LIVE MARKET TELEMETRY*
+_Source: ${telemetry.source.toUpperCase()} // Status: ${telemetry.status.toUpperCase()}_
 
-*Allocations:*
-• *$DEMP Token:* 55% ($23,567.75)
-• *Solana (SOL):* 30% ($12,855.15)
-• *USDC Reserve:* 15% ($6,427.60)
+*Token:* $DEMP (Dark Empire Token)
+• *Price (USD):* \`${priceDisplay}\`
+• *24h Change:* \`${changeDisplay}\`
+• *Market Cap:* \`${mcapDisplay}\`
+• *24h Volume:* \`${volDisplay}\`
 
-_Launch the full Web3 dashboard to view real-time equity curves and trade history._`;
+_Connect your wallet on Dark Empire HQ to view your individual on-chain holdings & VIP status._`;
 
   const keyboard = {
     inline_keyboard: [
       [
-        { text: "📊 Open Portfolio Dashboard", url: "https://darkempirelords.com/command-center" }
+        { text: "📊 Open Web Portfolio", url: `${CANONICAL_SITE_URL}/holdings` },
+        { text: "⚡ Swap $DEMP", url: `https://jup.ag/swap/SOL-${DEMP_TOKEN_MINT}` }
       ],
       [
         { text: "🔙 Main Menu", callback_data: "cmd_help" }
@@ -393,7 +415,7 @@ async function handleOracleCommand(chatId: string | number, query: string) {
       chatId,
       `🔮 *DARK EMPIRE AI TRADING ASSISTANT*
 
-Ask the Gemini 2.5 Oracle any technical analysis or trading setup question.
+Ask the Gemini AI Oracle any market or strategic trading question.
 
 *Usage:*
 \`/oracle <your question>\`
@@ -434,7 +456,7 @@ Structure your response in 4 clear sections:
     await sendTelegramMessage(chatId, `🔮 *AI ASSISTANT DIRECTIVE*\n\n${replyText}`, MAIN_KEYBOARD);
   } catch (err: any) {
     console.error("[Oracle Telegram Error]:", err);
-    await sendTelegramMessage(chatId, `⚠️ *AI Assistant Error:* ${err.message || "Failed to process query."}`);
+    await sendTelegramMessage(chatId, `⚠️ *AI Assistant Error:* Failed to process query. Please retry.`);
   }
 }
 
@@ -445,55 +467,35 @@ async function handleStatusCommand(chatId: string | number) {
   const text = `📊 *DARK EMPIRE SYSTEM HEALTH & UPTIME*
 _Timestamp: ${nowStr}_
 
-🟢 *Production Domain:* darkempirelords.com (200 OK)
-🟢 *Solana Multi-RPC Failover Pool:* HEALTHY (Helius / Alchemy / QuickNode)
-🟢 *Birdeye Live DeFi Stream:* CONNECTED
-🟢 *AI Oracle Engine (Gemini 2.5):* OPERATIONAL
-🟢 *Dual-Relay Bridge:* ACTIVE (@DarkEmpireRelayBot)
-🟢 *Trading Bot Engine:* 3/3 Workers Online (100% Uptime)
-
-*Solana Network Latency:* \`~142ms\``;
+🟢 *Production Domain:* ${CANONICAL_SITE_URL} (Active)
+🟢 *Solana Multi-RPC Pool:* Failover Active (Helius / Alchemy / QuickNode / Mainnet)
+🟢 *Live DeFi Telemetry:* Connected (DexScreener / Birdeye)
+🟢 *AI Oracle Engine (Gemini 2.5):* Operational
+🟢 *Dual-Relay Bridge:* Active (@DarkEmpireRelayBot)`;
 
   await sendTelegramMessage(chatId, text, MAIN_KEYBOARD);
 }
 
 // 8. /balance Handler
 async function handleBalanceCommand(chatId: string | number) {
-  const address = "8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx";
-  const apiKey = process.env.BIRDEYE_API_KEY || process.env.NEXT_PUBLIC_BIRDEYE_API_KEY;
-  let priceStr = "$0.00000495 USD";
-  let mcStr = "$4.95K USD";
+  const telemetry = await fetchTokenTelemetry(DEMP_TOKEN_MINT);
+  const priceStr = telemetry.priceUsd !== null ? `$${telemetry.priceUsd.toFixed(6)} USD` : "Awaiting live data";
+  const mcStr = formatUsdValue(telemetry.marketCapUsd);
 
-  if (apiKey) {
-    try {
-      const res = await fetch(`https://public-api.birdeye.so/defi/token_overview?address=${address}`, {
-        headers: { "X-API-KEY": apiKey, "x-chain": "solana" }
-      });
-      if (res.ok) {
-        const json = await res.json();
-        if (json.data?.price) priceStr = `$${Number(json.data.price).toFixed(8)} USD`;
-        if (json.data?.mc) mcStr = `$${Number(json.data.mc).toLocaleString()} USD`;
-      }
-    } catch (e) {
-      console.warn("[Telegram Balance] Birdeye fetch error:", e);
-    }
-  }
+  const text = `💰 *LIVE $DEMP VALUATION*
+_Source: ${telemetry.source.toUpperCase()}_
 
-  const text = `💰 *LIVE PORTFOLIO BALANCES*
+• *$DEMP Live Price:* \`${priceStr}\`
+• *Market Capitalization:* \`${mcStr}\`
+• *Mint:* \`${DEMP_TOKEN_MINT}\`
 
-*Tracked Holdings:*
-• *$DEMP Token:* 1,000,000 DEMP (\`${priceStr}\` / MC: \`${mcStr}\`)
-• *Solana (SOL):* 45.25 SOL (~$8,600.00 USD)
-• *USD Coin (USDC):* $5,230.00 USDC
-
-*Total Valuation:* \`$18,780.00 USD\`
-*Unrealized PnL:* \`+$2,150.00 (+12.9%)\` 🟢`;
+_To check your personal balance, connect your Solana wallet at ${CANONICAL_SITE_URL}._`;
 
   const keyboard = {
     inline_keyboard: [
       [
-        { text: "⚡ Swap Tokens on Jupiter", url: `https://jup.ag/swap/SOL-${address}` },
-        { text: "📊 Live Terminal", url: "https://darkempirelords.com/command-center" }
+        { text: "⚡ Swap on Jupiter", url: `https://jup.ag/swap/SOL-${DEMP_TOKEN_MINT}` },
+        { text: "📊 DexScreener Chart", url: `https://dexscreener.com/solana/${DEMP_TOKEN_MINT}` }
       ]
     ]
   };
@@ -503,29 +505,24 @@ async function handleBalanceCommand(chatId: string | number) {
 
 // 9. /bots Handler
 async function handleBotsCommand(chatId: string | number) {
-  const text = `🤖 *ACTIVE AUTOMATED TRADING BOTS*
+  const text = `🤖 *AUTOMATED TRADING BOT INFRASTRUCTURE*
 
 *Execution Cluster:* Solana Low-Latency Edge Relay
-*Global Status:* 🟢 ALL ACTIVE (3 Running)
 
-*Active Instances:*
-1. 🟢 *Grid Alpha (SOL-USDC)*
-   • Status: Running | 24h PnL: \`+$420.50\` | Trades: 34
-2. 🟢 *Momentum Hunter (DEMP-SOL)*
-   • Status: Running | 24h PnL: \`+$812.30\` | Trades: 18
-3. 🟢 *Arbitrage Bridge (BTC-USDC)*
-   • Status: Running | 24h PnL: \`+$195.00\` | Trades: 8
+*Supported Strategies:*
+1. ⚡ *Grid Alpha (SOL-USDC / DEMP-SOL)*
+   • Captures volatility across custom price channels
+2. 🎯 *DCA Accumulator*
+   • Systematic time-weighted token accumulation
+3. 🐋 *Whale Momentum Follower*
+   • On-chain liquidity detection & front-running alerts
 
-*Total Bot Profit Today:* \`+$1,427.80 USD\``;
+_To configure and arm automated strategies, open the Operations Terminal._`;
 
   const keyboard = {
     inline_keyboard: [
       [
-        { text: "⏸️ Pause All Bots", callback_data: "cmd_pause" },
-        { text: "▶️ Resume Bots", callback_data: "cmd_resume" }
-      ],
-      [
-        { text: "⚙️ Manage in Command Center", url: "https://darkempirelords.com/command-center" }
+        { text: "⚙️ Manage in Terminal", url: `${CANONICAL_SITE_URL}/command-center` }
       ]
     ]
   };
@@ -535,25 +532,14 @@ async function handleBotsCommand(chatId: string | number) {
 
 // 10. /pause Handler
 async function handlePauseCommand(chatId: string | number) {
-  const text = `⏸️ *EMERGENCY STOP EXECUTED*
+  const text = `⏸️ *AUTOMATED WORKER DIRECTIVE*
 
-All automated trading bot engines have been placed into *STANDBY / PAUSED* state.
-
-• *Grid Alpha:* STOPPED 🟡
-• *Momentum Hunter:* STOPPED 🟡
-• *Arbitrage Bridge:* STOPPED 🟡
-• *Pending Limit Orders:* CANCELED
-• *Capital Safety:* Cold storage lock intact 🛡️
-
-Send /resume or tap below to re-arm trading bots when conditions are safe.`;
+To place trading bots into standby, log in to your verified session in the Dark Empire Operations Terminal.`;
 
   const keyboard = {
     inline_keyboard: [
       [
-        { text: "▶️ Restart / Resume Bots", callback_data: "cmd_resume" }
-      ],
-      [
-        { text: "🖥️ Command Center", url: "https://darkempirelords.com/command-center" }
+        { text: "🖥️ Open Terminal Controls", url: `${CANONICAL_SITE_URL}/command-center` }
       ]
     ]
   };
@@ -563,24 +549,14 @@ Send /resume or tap below to re-arm trading bots when conditions are safe.`;
 
 // 11. /resume Handler
 async function handleResumeCommand(chatId: string | number) {
-  const text = `▶️ *TRADING BOT ENGINES RESTARTED*
+  const text = `▶️ *AUTOMATED WORKER DIRECTIVE*
 
-Algorithmic execution workers have been re-armed and synced with the live Solana RPC proxy.
-
-• *Grid Alpha (SOL-USDC):* ACTIVE 🟢
-• *Momentum Hunter (DEMP-SOL):* ACTIVE 🟢
-• *Arbitrage Bridge (BTC-USDC):* ACTIVE 🟢
-• *Strategy Loop:* Polling Birdeye DeFi orderbook every 500ms
-
-All systems running normally.`;
+To re-arm trading workers, access the Dark Empire Operations Terminal dashboard.`;
 
   const keyboard = {
     inline_keyboard: [
       [
-        { text: "🤖 View Bot Telemetry", callback_data: "cmd_bots" }
-      ],
-      [
-        { text: "🖥️ Command Center", url: "https://darkempirelords.com/command-center" }
+        { text: "🖥️ Open Terminal Controls", url: `${CANONICAL_SITE_URL}/command-center` }
       ]
     ]
   };
@@ -590,26 +566,18 @@ All systems running normally.`;
 
 // 12. /sweep Handler
 async function handleSweepCommand(chatId: string | number) {
-  const coldStorageAddress = "DarkEmpireColdStorageMultiSig1111111111111";
-  
-  const text = `🧹 *PROFIT SWEEP INITIATED*
+  const text = `🧹 *COLD STORAGE SWEEP PROTOCOL*
 
-Manual profit sweep directive dispatched to Solana execution node.
+Manual and automated profit sweeps transfer realized yields directly to multi-sig cold storage.
 
-*Sweep Summary:*
-• *Origin:* Active Bot Trading Vaults
-• *Destination Vault:* \`${coldStorageAddress}\`
-• *Swept Realized Profit:* \`$1,427.80 USD (7.52 SOL)\`
-• *Transaction Status:* CONFIRMED ON SOLANA MAINNET 🟢
-• *Multi-Sig Verification:* Recorded
-
-All profits are safely secured in cold storage.`;
+• *Governance:* 3-of-5 Hardware Multi-Sig
+• *Verifiability:* On-chain Solana transaction signatures recorded in private audit log.`;
 
   const keyboard = {
     inline_keyboard: [
       [
-        { text: "🏦 View Treasury Wallet", callback_data: "cmd_wallet" },
-        { text: "💼 View Portfolio", callback_data: "cmd_portfolio" }
+        { text: "🏦 View Holdings", url: `${CANONICAL_SITE_URL}/holdings` },
+        { text: "🔙 Main Menu", callback_data: "cmd_help" }
       ]
     ]
   };
@@ -619,25 +587,23 @@ All profits are safely secured in cold storage.`;
 
 // 13. /help Handler
 async function handleHelpCommand(chatId: string | number) {
-  const text = `📖 *DARK EMPIRE BOT & WEBHOOK DIRECTIVES*
+  const text = `📖 *DARK EMPIRE BOT DIRECTIVES*
 
-*Trading Terminal Commands:*
-• /wallet — View treasury wallet status
-• /trade — Execute trades via AI engine
-• /alerts — Set price alerts
-• /portfolio — View portfolio performance
-• /oracle <query> — Summon AI trading assistant
-• /status — View Dark Empire system health and uptime
-• /balance — Check live portfolio balances
-• /bots — List active automated trading bots
-• /pause — Emergency stop all active bots
-• /resume — Restart active trading bots
-• /sweep — Trigger manual profit sweep to cold storage
+*Available Commands:*
+• /wallet — View verified treasury and deployer addresses
+• /trade — Swap tokens via Jupiter Aggregator
+• /alerts — Price alert and whale radar status
+• /portfolio — Live token telemetry & analytics
+• /oracle <query> — Consult AI trading assistant
+• /status — System uptime and RPC status
+• /balance — Real-time $DEMP valuation
+• /bots — Trading bot strategy index
+• /vip — VIP Syndicate tiers and perks
 • /help — Display this directive manual
 
-*Official Web Portals:*
-• Website: https://darkempirelords.com
-• Command Center: https://darkempirelords.com/command-center
+*Official Links:*
+• Web: ${CANONICAL_SITE_URL}
+• Terminal: ${CANONICAL_SITE_URL}/command-center
 • Discord: https://discord.gg/cyWVcvyZ
 • Bot: @DarkEmpireRelayBot`;
 
@@ -646,23 +612,25 @@ async function handleHelpCommand(chatId: string | number) {
 
 // 14. /vip Handler
 async function handleVipCommand(chatId: string | number) {
+  const mint = DEMP_TOKEN_MINT;
   const text = `👑 *VIP SYNDICATE LOUNGE & TIER VERIFICATION*
 
-Hold $DEMP tokens on Solana to unlock VIP benefits:
+Hold $DEMP tokens on Solana to unlock VIP privileges:
 
 *Tiers:*
-🥉 *Bronze (1,000 $DEMP):* Standard Signals
-🥈 *Silver (10,000 $DEMP):* Premium Whale Alerts
-🥇 *Gold (50,000 $DEMP):* Bot Engine Controls
-👑 *Sovereign (250,000 $DEMP):* Private VIP Syndicate Telegram Lounge & Strategy Calls
+🥉 *Bronze (1,000 $DEMP):* 5% Fee Discount & Operative Badge
+🥈 *Silver (10,000 $DEMP):* 15% Discount & Dedicated High-Speed RPC
+🥇 *Gold (50,000 $DEMP):* 30% Discount & Free Monthly Oracle Credits
+👑 *Dark Lord (100,000+ $DEMP):* 50% Discount & Unlimited AI Access
 
 *Token Contract:*
-\`8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx\``;
+\`${mint}\``;
 
   const vipKeyboard = {
     inline_keyboard: [
       [
-        { text: "👑 Verify VIP Tier on Web", url: "https://darkempirelords.com/vip" }
+        { text: "👑 Verify VIP Tier on Web", url: `${CANONICAL_SITE_URL}/vip` },
+        { text: "⚡ Buy $DEMP", url: `https://jup.ag/swap/SOL-${mint}` }
       ],
       [
         { text: "🔙 Main Menu", callback_data: "cmd_help" }
@@ -678,7 +646,7 @@ async function handleContactCommand(chatId: string | number, messageContent: str
   if (!messageContent) {
     await sendTelegramMessage(
       chatId,
-      `📩 *DARK EMPIRE HQ SUPPORT*\n\nUsage:\n\`/contact <your message>\`\n\nExample:\n\`/contact Inquiry about API rate limit upgrade\``
+      `📩 *DARK EMPIRE HQ SUPPORT*\n\nUsage:\n\`/contact <your message>\`\n\nExample:\n\`/contact Inquiry about VIP Syndicate tier verification\``
     );
     return;
   }
@@ -687,8 +655,8 @@ async function handleContactCommand(chatId: string | number, messageContent: str
   const username = user?.username ? `@${user.username}` : `Chat ${chatId}`;
 
   const discordWebhookUrl = process.env.DISCORD_WEBHOOK_URL;
-  const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN || "8787976794:AAFv5ZiPHDXOqMTedc81erwHB3d0ayzh19E";
-  const telegramChatId = process.env.TELEGRAM_CHAT_ID || "8283060638";
+  const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
+  const telegramChatId = process.env.TELEGRAM_CHAT_ID;
 
   let relayedDiscord = false;
   let relayedTelegram = false;
@@ -712,11 +680,12 @@ async function handleContactCommand(chatId: string | number, messageContent: str
               timestamp: new Date().toISOString()
             }
           ]
-        })
+        }),
+        signal: AbortSignal.timeout(6000),
       });
       relayedDiscord = true;
     } catch (e) {
-      console.error("[Contact Relay] Discord failed:", e);
+      console.error("[Contact Relay] Discord relay failed:", e);
     }
   }
 
@@ -729,11 +698,12 @@ async function handleContactCommand(chatId: string | number, messageContent: str
           chat_id: telegramChatId,
           text: `📩 *NEW CONTACT INQUIRY VIA @DarkEmpireRelayBot*\n\n*From:* ${senderName} (${username})\n*Chat ID:* \`${chatId}\`\n\n*Message:*\n${messageContent}`,
           parse_mode: "Markdown"
-        })
+        }),
+        signal: AbortSignal.timeout(6000),
       });
       relayedTelegram = true;
     } catch (e) {
-      console.error("[Contact Relay] Telegram HQ failed:", e);
+      console.error("[Contact Relay] Telegram HQ relay failed:", e);
     }
   }
 

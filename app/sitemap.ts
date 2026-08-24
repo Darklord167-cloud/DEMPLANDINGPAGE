@@ -1,8 +1,7 @@
 import { MetadataRoute } from 'next';
+import { CANONICAL_SITE_URL } from '@/lib/config/public';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://darkempire.holdings';
-
   const routes = [
     '',
     '/vip',
@@ -21,7 +20,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   return routes.map((route) => ({
-    url: `${baseUrl}${route}`,
+    url: `${CANONICAL_SITE_URL}${route}`,
     lastModified: new Date(),
     changeFrequency: route === '' ? 'daily' : 'weekly',
     priority: route === '' ? 1.0 : 0.8,

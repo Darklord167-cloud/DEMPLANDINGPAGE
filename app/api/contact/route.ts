@@ -3,36 +3,53 @@ import { z } from "zod";
 import { storage } from "@/server/storage";
 import { insertContactMessageSchema } from "@/shared/schema";
 
+const contactRateLimits = new Map<string, { count: number; resetAt: number }>();
+const CONTACT_MAX = 5;
+const CONTACT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+
+function checkContactRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = contactRateLimits.get(ip);
+  if (!record || now > record.resetAt) {
+    contactRateLimits.set(ip, { count: 1, resetAt: now + CONTACT_WINDOW_MS });
+    return true;
+  }
+  if (record.count >= CONTACT_MAX) return false;
+  record.count += 1;
+  return true;
+}
+
 export async function POST(req: Request) {
   try {
+    const clientIp = req.headers.get("x-forwarded-for") || "127.0.0.1";
+    if (!checkContactRateLimit(clientIp)) {
+      return NextResponse.json(
+        { success: false, message: "Too many contact submissions. Please retry shortly." },
+        { status: 429 }
+      );
+    }
+
     let body: unknown;
     try {
       body = await req.json();
     } catch (jsonErr) {
-      console.warn("[Contact API] Failed to parse JSON request body:", jsonErr);
       return NextResponse.json(
         { success: false, message: "Invalid JSON request payload provided" },
         { status: 400 }
       );
     }
 
-    console.log("[Contact API] Incoming submission received:", body);
-
     // Validate payload against schema
     const parseResult = insertContactMessageSchema.safeParse(body);
     if (!parseResult.success) {
       const errorMessage = parseResult.error.issues[0]?.message || "Invalid contact form data";
-      console.warn("[Contact API] Validation failed:", parseResult.error.issues);
       return NextResponse.json(
-        { success: false, message: errorMessage, errors: parseResult.error.flatten() },
+        { success: false, message: errorMessage },
         { status: 400 }
       );
     }
 
     const data = parseResult.data;
-
-    // Log submission details
-    console.log(`[Contact API] Submission from ${data.name} (${data.email}) - Subject: "${data.subject}"`);
 
     let savedMessage = null;
 
@@ -41,15 +58,12 @@ export async function POST(req: Request) {
     if (dbUrl) {
       try {
         savedMessage = await storage.createContactMessage(data);
-        console.log("[Contact API] Message saved to database with ID:", savedMessage.id);
       } catch (dbError) {
         console.warn(
           "[Contact API] Database save skipped or failed:",
           dbError instanceof Error ? dbError.message : dbError
         );
       }
-    } else {
-      console.log("[Contact API] Database connection unconfigured. Proceeding with mock response delivery.");
     }
 
     // 2. Discord Webhook relay if configured
@@ -74,8 +88,8 @@ export async function POST(req: Request) {
               },
             ],
           }),
+          signal: AbortSignal.timeout(5000),
         });
-        console.log("[Contact API] Relayed message to Discord webhook");
       } catch (discordErr) {
         console.error("[Contact API] Discord webhook relay failed:", discordErr);
       }
@@ -95,8 +109,8 @@ export async function POST(req: Request) {
             text,
             parse_mode: "Markdown",
           }),
+          signal: AbortSignal.timeout(5000),
         });
-        console.log("[Contact API] Relayed message to Telegram bot");
       } catch (telegramErr) {
         console.error("[Contact API] Telegram relay failed:", telegramErr);
       }
@@ -108,7 +122,7 @@ export async function POST(req: Request) {
       try {
         const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_FROM || "darklord@darkempirelords.com";
         const senderName = process.env.BREVO_SENDER_NAME || "Dark Empire Lords HQ";
-        const recipientEmail = process.env.BREVO_RECIPIENT_EMAIL || process.env.EMAIL_TO || "angelcarmona167@gmail.com";
+        const recipientEmail = process.env.BREVO_RECIPIENT_EMAIL || process.env.EMAIL_TO || "support@darkempirelords.com";
 
         await fetch("https://api.brevo.com/v3/smtp/email", {
           method: "POST",
@@ -136,37 +150,13 @@ export async function POST(req: Request) {
             `,
             textContent: `From: ${data.name} (${data.email})\nSubject: ${data.subject}\n\nMessage:\n${data.message}`,
           }),
+          signal: AbortSignal.timeout(5000),
         });
-        console.log("[Contact API] Relayed message via Brevo transactional email API");
       } catch (brevoErr) {
         console.error("[Contact API] Brevo email relay failed:", brevoErr);
       }
     }
 
-    // 5. Resend / External Email relay if configured
-    const resendApiKey = process.env.RESEND_API_KEY;
-    if (resendApiKey) {
-      try {
-        await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${resendApiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: process.env.EMAIL_FROM || "contact@darkempire.com",
-            to: [process.env.EMAIL_TO || "support@darkempire.com"],
-            subject: `[Contact Form] ${data.subject}`,
-            text: `From: ${data.name} (${data.email})\n\n${data.message}`,
-          }),
-        });
-        console.log("[Contact API] Relayed message via Resend email service");
-      } catch (emailErr) {
-        console.error("[Contact API] Resend email relay failed:", emailErr);
-      }
-    }
-
-    // Return successful response (real or mocked) so UI displays green success state
     return NextResponse.json(
       {
         success: true,
@@ -181,16 +171,9 @@ export async function POST(req: Request) {
       { status: 200 }
     );
   } catch (error: unknown) {
-    console.error("[Contact API] Unexpected error handling submission:", error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, message: error.issues[0]?.message || "Validation error" },
-        { status: 400 }
-      );
-    }
-    const errorMessage = error instanceof Error ? error.message : "Failed to send message. Please try again.";
+    console.error("[Contact API Internal Error]:", error);
     return NextResponse.json(
-      { success: false, message: errorMessage },
+      { success: false, message: "Failed to send message. Please try again later." },
       { status: 500 }
     );
   }

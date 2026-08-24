@@ -129,15 +129,15 @@ export default function HoldingsPage() {
                 <Coins className="w-4 h-4 text-purple-400" />
                 $DEMP Live Price
               </span>
-              <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${telemetry.priceChange24h >= 0 ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-rose-500/20 text-rose-400 border border-rose-500/30"}`}>
-                {telemetry.priceChange24h >= 0 ? "+" : ""}{telemetry.priceChange24h.toFixed(2)}%
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${telemetry.priceChange24h !== null && telemetry.priceChange24h >= 0 ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-rose-500/20 text-rose-400 border border-rose-500/30"}`}>
+                {telemetry.priceChange24h !== null ? `${telemetry.priceChange24h >= 0 ? "+" : ""}${telemetry.priceChange24h.toFixed(2)}%` : "Live Sync"}
               </span>
             </div>
             <div className="text-2xl font-mono font-extrabold text-white tracking-tight text-glow">
-              ${telemetry.priceUsd.toFixed(4)}
+              {telemetry.priceUsd !== null ? `$${telemetry.priceUsd.toFixed(4)}` : "Awaiting Data"}
             </div>
             <div className="text-[11px] font-mono text-purple-300">
-              {telemetry.priceSol.toFixed(6)} SOL
+              {telemetry.priceSol !== null ? `${telemetry.priceSol.toFixed(6)} SOL` : "— SOL"}
             </div>
           </div>
 
@@ -170,7 +170,7 @@ export default function HoldingsPage() {
               </span>
             </div>
             <div className="text-2xl font-mono font-extrabold text-emerald-400 tracking-tight">
-              ${userHoldingUsd.toFixed(2)}
+              {userHoldingUsd !== null ? `$${userHoldingUsd.toFixed(2)}` : "Awaiting Data"}
             </div>
             <div className="text-[11px] font-mono text-zinc-400">
               {dempBalance.toLocaleString()} $DEMP Balance
@@ -190,7 +190,7 @@ export default function HoldingsPage() {
               {formatUsdValue(telemetry.liquidityUsd)}
             </div>
             <div className="text-[11px] font-mono text-zinc-400">
-              {telemetry.holdersCount.toLocaleString()} Verified Holders
+              {telemetry.holdersCount !== null ? `${telemetry.holdersCount.toLocaleString()} Verified Holders` : "On-chain Tracking"}
             </div>
           </div>
         </div>

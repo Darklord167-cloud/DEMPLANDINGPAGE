@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { DEMP_TOKEN_MINT } from "@/lib/solana/config";
+import { DEMP_TOKEN_MINT, SOL_TOKEN_MINT, BONK_TOKEN_MINT } from "@/lib/solana/config";
 
 export interface Watchitem {
   id: string;
@@ -39,7 +39,7 @@ const DEFAULT_WATCHLIST: Watchitem[] = [
     id: "sol-1",
     symbol: "SOL",
     name: "Solana",
-    mint: "So11111111111111111111111111111111111111112",
+    mint: SOL_TOKEN_MINT,
     priceUsd: 185.20,
     change24h: 4.15,
   },
@@ -47,7 +47,7 @@ const DEFAULT_WATCHLIST: Watchitem[] = [
     id: "bonk-1",
     symbol: "BONK",
     name: "Bonk",
-    mint: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    mint: BONK_TOKEN_MINT,
     priceUsd: 0.000024,
     change24h: -2.10,
   },

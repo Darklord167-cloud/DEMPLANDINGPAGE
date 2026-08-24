@@ -48,7 +48,7 @@ describe('Trade Alerts Webhook API Route', () => {
     const json = await res.json();
     expect(json.success).toBe(true);
     expect(json.alerted).toBe(false);
-    expect(json.reason).toContain('Whale alert threshold not met');
+    expect(json.reason).toContain('whale threshold');
   });
 
   it('should skip whale alert broadcasting when trade amount <= $1,000 USD', async () => {
@@ -71,6 +71,7 @@ describe('Trade Alerts Webhook API Route', () => {
   it('should trigger Dual-Relay WHALE ALERT when trade amount > $1,000 USD', async () => {
     process.env.DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/123/abc';
     process.env.TELEGRAM_BOT_TOKEN = 'mock-bot-token';
+    process.env.TELEGRAM_CHAT_ID = '12345678';
 
     const mockFetch = vi.fn().mockImplementation((url: string) => {
       if (url.includes('discord.com')) {
@@ -92,7 +93,7 @@ describe('Trade Alerts Webhook API Route', () => {
         tokenSymbol: '$DEMP',
         tokenAmount: 500000,
         trader: '8yGrrj6d9p4WNPRkunVo1NwkRSX3VTo43ZS39xu7jupx',
-        signature: '5K123456789abcdef',
+        signature: '5K123456789abcdef_unique',
       }),
     });
 
@@ -123,7 +124,7 @@ describe('Trade Alerts Webhook API Route', () => {
         tokenAmount: 103092,
         traderWallet: '8yGrj6d9p4WfPRkunVo1NwkRSX3VTo43ZS39xu7jupx',
         timestamp: '2026-08-02T19:15:00Z',
-        txSignature: '5vabY3...',
+        txSignature: '5vabY3_unique_alias...',
       }),
     });
 
@@ -135,7 +136,7 @@ describe('Trade Alerts Webhook API Route', () => {
     expect(json.whaleAlert.amountUsd).toBe(5000);
     expect(json.whaleAlert.type).toBe('BUY');
     expect(json.whaleAlert.trader).toBe('8yGrj6d9p4WfPRkunVo1NwkRSX3VTo43ZS39xu7jupx');
-    expect(json.whaleAlert.signature).toBe('5vabY3...');
+    expect(json.whaleAlert.signature).toBe('5vabY3_unique_alias...');
   });
 
   it('should process Helius Enhanced Webhook array payloads with SWAP event schema mapping', async () => {
@@ -152,7 +153,7 @@ describe('Trade Alerts Webhook API Route', () => {
         type: 'SWAP',
         source: 'JUPITER',
         feePayer: '8yGrj6d9p4WfPRkunVo1NwkRSX3VTo43ZS39xu7jupx',
-        signature: '5HeliusTxSignature123456789',
+        signature: '5HeliusTxSignature123456789_unique',
         timestamp: 1722626100,
         events: {
           swap: {
@@ -193,6 +194,6 @@ describe('Trade Alerts Webhook API Route', () => {
     expect(json.whaleAlert.amountUsd).toBe(5500);
     expect(json.whaleAlert.tokenAmount).toBe('113,400');
     expect(json.whaleAlert.trader).toBe('8yGrj6d9p4WfPRkunVo1NwkRSX3VTo43ZS39xu7jupx');
-    expect(json.whaleAlert.signature).toBe('5HeliusTxSignature123456789');
+    expect(json.whaleAlert.signature).toBe('5HeliusTxSignature123456789_unique');
   });
 });

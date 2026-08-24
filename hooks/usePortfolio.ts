@@ -116,8 +116,8 @@ export function usePortfolio(overrideAddress?: string): PortfolioState {
   const [lastUpdated, setLastUpdated] = useState<string>(new Date().toISOString());
 
   // Live telemetry price state
-  const [livePriceUsd, setLivePriceUsd] = useState<number>(0.0485);
-  const [livePriceChange24h, setLivePriceChange24h] = useState<number>(12.45);
+  const [livePriceUsd, setLivePriceUsd] = useState<number | null>(null);
+  const [livePriceChange24h, setLivePriceChange24h] = useState<number | null>(null);
 
   // Live connected wallet balances
   const [liveDempBalance, setLiveDempBalance] = useState<number>(0);
@@ -146,7 +146,7 @@ export function usePortfolio(overrideAddress?: string): PortfolioState {
       // 1. Birdeye API Lookup for $DEMP token price
       const birdeyePrice = await fetchBirdeyePrice(DEMP_TOKEN_ADDRESS);
       let currentPrice = birdeyePrice;
-      let priceChange24h = 12.45;
+      let priceChange24h: number | null = null;
 
       // 2. Telemetry fallback if Birdeye price is rate-limited or null
       if (!currentPrice) {
@@ -155,7 +155,7 @@ export function usePortfolio(overrideAddress?: string): PortfolioState {
         priceChange24h = telemetry.priceChange24h;
       }
 
-      setLivePriceUsd(currentPrice || 0.0485);
+      setLivePriceUsd(currentPrice);
       setLivePriceChange24h(priceChange24h);
 
       // 3. If real wallet connected, attempt live RPC balance query
@@ -262,15 +262,15 @@ export function usePortfolio(overrideAddress?: string): PortfolioState {
   }
 
   // Construct Connected Wallet Data
-  const dempPrice = livePriceUsd || 0.0485;
+  const dempPrice = livePriceUsd ?? 0;
   const dempValueUsd = liveDempBalance * dempPrice;
   const solPrice = 185.00;
   const solValueUsd = liveSolBalance * solPrice;
   const usdcValueUsd = liveUsdcBalance;
   const totalValueUsd = dempValueUsd + solValueUsd + usdcValueUsd;
 
-  const isPositivePnl = livePriceChange24h >= 0;
-  const pnl24hPercent = livePriceChange24h;
+  const isPositivePnl = (livePriceChange24h ?? 0) >= 0;
+  const pnl24hPercent = livePriceChange24h ?? 0;
   const pnl24hUsd = totalValueUsd * (pnl24hPercent / 100);
 
   const tokens: TokenHolding[] = [
@@ -281,7 +281,7 @@ export function usePortfolio(overrideAddress?: string): PortfolioState {
       balance: liveDempBalance,
       priceUsd: dempPrice,
       valueUsd: dempValueUsd,
-      change24h: livePriceChange24h,
+      change24h: livePriceChange24h ?? 0,
       allocationPercent: totalValueUsd > 0 ? Math.round((dempValueUsd / totalValueUsd) * 100) : 100,
     },
   ];
