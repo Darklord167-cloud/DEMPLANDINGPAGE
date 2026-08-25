@@ -189,9 +189,24 @@ export function RealTimeTradeStream({
       {/* Main Trade Feed Container */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2.5 custom-scrollbar">
         {trades.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-6 text-zinc-500 font-mono text-xs">
-            <Zap className="w-8 h-8 text-purple-500/40 mb-2 animate-bounce" />
-            <span>Listening for live DEX orders on Solana...</span>
+          <div className="h-full min-h-[220px] flex flex-col items-center justify-center text-center p-6 text-zinc-400 font-mono text-xs space-y-3">
+            <div className="relative flex items-center justify-center">
+              <span className="absolute w-12 h-12 rounded-full bg-primary/20 animate-ping" />
+              <div className="w-10 h-10 rounded-full bg-zinc-900 border border-primary/40 flex items-center justify-center text-primary shadow-lg">
+                <Zap className="w-5 h-5 text-amber-400 animate-pulse" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <p className="font-bold text-white uppercase tracking-wider text-[11px]">
+                Active On-Chain Telemetry Radar
+              </p>
+              <p className="text-[10px] text-zinc-500 max-w-xs">
+                Scanning Solana Raydium &amp; Meteora pools for live $DEMP swap transactions in real time.
+              </p>
+            </div>
+            <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold">
+              ● Live RPC Connection Active
+            </span>
           </div>
         ) : (
           <AnimatePresence initial={false}>
