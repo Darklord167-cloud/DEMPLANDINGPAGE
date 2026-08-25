@@ -10,6 +10,7 @@ import { Loader2, Coins, CreditCard, CheckCircle2, ShieldCheck, Zap } from "luci
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { PayPalButton } from "@/components/PayPalButton";
+import { PayPalHostedButton } from "@/components/PayPalHostedButton";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -281,7 +282,25 @@ function CreditsContent() {
         ))}
       </div>
 
-      <div className="mt-20 text-center p-12 border rounded-3xl bg-muted/20">
+      {/* Express PayPal Hosted Checkout Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mt-16 p-8 rounded-3xl bg-gradient-to-r from-purple-950/20 via-black to-amber-950/20 border border-primary/30 max-w-xl mx-auto text-center shadow-xl shadow-purple-950/10"
+      >
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Zap className="w-5 h-5 text-amber-400" />
+          <h3 className="text-xl font-bold font-orbitron text-white">Direct PayPal 1-Click Checkout</h3>
+        </div>
+        <p className="text-xs font-mono text-muted-foreground mb-6">
+          Official Hosted Gateway &bull; Card, PayPal, Venmo, &amp; Pay Later
+        </p>
+        <div className="flex justify-center w-full min-h-[50px]">
+          <PayPalHostedButton hostedButtonId="UE7APKRZ2AC4Q" />
+        </div>
+      </motion.div>
+
+      <div className="mt-16 text-center p-12 border rounded-3xl bg-muted/20">
         <h2 className="text-2xl font-bold mb-4 font-orbitron flex items-center justify-center gap-2">
           <ShieldCheck className="w-6 h-6 text-primary" /> Secure Multi-Gateway Fiat Bridge
         </h2>
