@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const address = searchParams.get("address") || DEMP_TOKEN_MINT;
 
-  const apiKey = process.env.BIRDEYE_API_KEY;
+  const apiKey = process.env.BIRDEYE_API_KEY || process.env.NEXT_PUBLIC_BIRDEYE_API_KEY;
 
   if (!apiKey) {
     return NextResponse.json(

@@ -8,7 +8,10 @@ function initFirebaseAdmin(): App | null {
   }
 
   // 1. Check for single JSON service account environment variable
-  const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  const serviceAccountJson = 
+    process.env.FIREBASE_SERVICE_ACCOUNT_KEY || 
+    process.env.FIREBASE_SERVICE_ACCOUNT || 
+    process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
   if (serviceAccountJson) {
     try {
       const serviceAccount = JSON.parse(serviceAccountJson);
