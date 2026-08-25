@@ -6,9 +6,10 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { Loader2, Coins, CreditCard, CheckCircle2 } from "lucide-react";
+import { Loader2, Coins, CreditCard, CheckCircle2, ShieldCheck, Zap } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
+import { PayPalButton } from "@/components/PayPalButton";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -40,6 +41,7 @@ function CreditsContent() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<number | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "paypal">("stripe");
 
   const fetchProfile = async () => {
     setLoading(true);
@@ -138,7 +140,7 @@ function CreditsContent() {
                 <p className="text-sm text-muted-foreground uppercase tracking-wider font-bold">Your Balance</p>
                 <p className="text-3xl font-orbitron text-primary">{profile.credits} Credits</p>
               </div>
-              <div className="w-px h-12 bg-border mx-2 hidden md:block" />
+              <div className="h-10 w-px bg-border hidden md:block" />
               <div className="text-left">
                 <p className="text-sm text-muted-foreground uppercase tracking-wider font-bold">Connected Wallet</p>
                 <p className="font-mono text-xs">{publicKey?.toBase58().slice(0, 12)}...</p>
@@ -181,6 +183,32 @@ function CreditsContent() {
             </div>
           </motion.div>
         )}
+
+        {/* Payment Method Switcher */}
+        <div className="flex items-center justify-center gap-3 p-1.5 bg-black/60 border border-primary/20 rounded-2xl mt-10 mb-2">
+          <button
+            type="button"
+            onClick={() => setPaymentMethod("stripe")}
+            className={`px-5 py-2.5 rounded-xl font-bold font-orbitron text-xs tracking-wider transition-all flex items-center gap-2 ${
+              paymentMethod === "stripe"
+                ? "bg-primary text-white shadow-[0_0_15px_rgba(168,85,247,0.4)] border border-primary/50"
+                : "text-muted-foreground hover:text-white"
+            }`}
+          >
+            <CreditCard className="w-4 h-4" /> Card / Apple Pay (Stripe)
+          </button>
+          <button
+            type="button"
+            onClick={() => setPaymentMethod("paypal")}
+            className={`px-5 py-2.5 rounded-xl font-bold font-orbitron text-xs tracking-wider transition-all flex items-center gap-2 ${
+              paymentMethod === "paypal"
+                ? "bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.5)] border border-amber-400"
+                : "text-muted-foreground hover:text-white"
+            }`}
+          >
+            <Zap className="w-4 h-4" /> PayPal / Venmo
+          </button>
+        </div>
       </div>
 
       <div className="grid md:grid-cols-3 gap-8">
@@ -221,21 +249,32 @@ function CreditsContent() {
                   </li>
                 </ul>
               </CardContent>
-              <CardFooter>
-                <Button 
-                  className="w-full font-bold group" 
-                  size="lg"
-                  variant={plan.popular ? "default" : "outline"}
-                  onClick={() => handleBuy(plan.price, index)}
-                  disabled={checkoutLoading !== null}
-                >
-                  {checkoutLoading === index ? (
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  ) : (
-                    <CreditCard className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
-                  )}
-                  Purchase via Stripe
-                </Button>
+              <CardFooter className="flex flex-col gap-3">
+                {paymentMethod === "stripe" ? (
+                  <Button 
+                    className="w-full font-bold group" 
+                    size="lg"
+                    variant={plan.popular ? "default" : "outline"}
+                    onClick={() => handleBuy(plan.price, index)}
+                    disabled={checkoutLoading !== null}
+                  >
+                    {checkoutLoading === index ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : (
+                      <CreditCard className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                    )}
+                    Purchase via Card (Stripe)
+                  </Button>
+                ) : (
+                  <div className="w-full">
+                    <PayPalButton
+                      amount={plan.price}
+                      credits={plan.credits}
+                      walletAddress={publicKey?.toBase58() || ""}
+                      onSuccess={() => fetchProfile()}
+                    />
+                  </div>
+                )}
               </CardFooter>
             </Card>
           </motion.div>
@@ -243,16 +282,17 @@ function CreditsContent() {
       </div>
 
       <div className="mt-20 text-center p-12 border rounded-3xl bg-muted/20">
-        <h2 className="text-2xl font-bold mb-4 font-orbitron">Secure Fiat Bridge</h2>
+        <h2 className="text-2xl font-bold mb-4 font-orbitron flex items-center justify-center gap-2">
+          <ShieldCheck className="w-6 h-6 text-primary" /> Secure Multi-Gateway Fiat Bridge
+        </h2>
         <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-          We use Stripe for secure fiat transactions. Your payment information is encrypted and handled 
-          entirely by Stripe. Credits are applied instantly to your account linked to your wallet.
+          We use industry-standard Stripe and PayPal for encrypted, zero-custody transactions. 
+          Credits are verified and applied instantly to your account linked to your Solana wallet.
         </p>
-        <div className="flex justify-center items-center gap-8 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
-           {/* Placeholder for payment logos */}
-           <div className="font-bold flex items-center gap-2"><CreditCard /> Visa</div>
-           <div className="font-bold flex items-center gap-2"><CreditCard /> Mastercard</div>
-           <div className="font-bold flex items-center gap-2"><CreditCard /> Amex</div>
+        <div className="flex flex-wrap justify-center items-center gap-8 opacity-70 hover:opacity-100 transition-all duration-500 font-mono text-xs text-muted-foreground">
+           <div className="font-bold flex items-center gap-2 text-white"><CreditCard className="w-4 h-4 text-primary" /> Visa / Mastercard</div>
+           <div className="font-bold flex items-center gap-2 text-white"><Zap className="w-4 h-4 text-amber-400" /> PayPal & Venmo</div>
+           <div className="font-bold flex items-center gap-2 text-white"><ShieldCheck className="w-4 h-4 text-emerald-400" /> SSL 256-Bit Encrypted</div>
         </div>
       </div>
     </div>

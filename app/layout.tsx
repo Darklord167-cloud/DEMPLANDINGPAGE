@@ -85,6 +85,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
       </head>
       <body className="bg-[#09090b] text-foreground font-sans antialiased selection:bg-purple-900/40" suppressHydrationWarning>
+        <Script
+          id="paypal-sdk"
+          src="https://www.paypal.com/sdk/js?client-id=BAAzTnzkMXba-Zye_IWa2tB42MjiiYqTEYQmUyj5It88EOutSLl6BXn1aONFm7f1C5F3UK4qhsHy7tzPpw&components=hosted-buttons,buttons&enable-funding=venmo&currency=USD"
+          strategy="afterInteractive"
+        />
         {gaMeasurementId && (
           <>
             <Script
