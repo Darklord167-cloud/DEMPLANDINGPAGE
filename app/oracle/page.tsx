@@ -96,6 +96,7 @@ import {
   type TokenTelemetry 
 } from "@/lib/solana";
 import { ArrowLeftRight, TrendingUp } from "lucide-react";
+import { SwapCard } from "@/components/dex/SwapCard";
 
 export default function OraclePage() {
   const { publicKey, connected, signMessage } = useWallet();
@@ -110,6 +111,7 @@ export default function OraclePage() {
   const [loading, setLoading] = useState(false);
   const [isOracleSpeaking, setIsOracleSpeaking] = useState(false);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
+  const [showSwapWidget, setShowSwapWidget] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -441,11 +443,34 @@ export default function OraclePage() {
               </div>
             </div>
           )}
+          {/* Inline Interactive 1-Click Swap Card */}
+          {showSwapWidget && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="flex justify-center my-4 relative z-30"
+            >
+              <SwapCard compact className="border-[#ff6600]/50 shadow-[0_0_25px_rgba(255,102,0,0.25)]" />
+            </motion.div>
+          )}
+
           <div ref={messagesEndRef} />
         </div>
 
         {/* Quick Action Prompt Chips */}
         <div className="flex flex-wrap items-center justify-center gap-2 mb-3 z-30">
+          <button
+            type="button"
+            onClick={() => setShowSwapWidget((prev) => !prev)}
+            className={`px-3 py-1.5 rounded-full border font-mono text-[11px] font-bold transition-all shadow-[0_0_10px_rgba(255,102,0,0.3)] flex items-center gap-1.5 ${
+              showSwapWidget
+                ? "bg-[#ff6600] text-black border-[#ff6600]"
+                : "bg-[#041635] border-[#ff6600]/50 text-[#ff8800] hover:bg-[#ff6600]/20"
+            }`}
+          >
+            <ArrowLeftRight className="w-3 h-3" />
+            <span>{showSwapWidget ? "HIDE 1-CLICK SWAP" : "1-CLICK DEX SWAP"}</span>
+          </button>
           <button
             type="button"
             onClick={() => setInput("SYNTHESIZE CURRENT SOLANA MARKET SENTIMENT AND HIGHLIGHT KEY BULLISH / BEARISH RATIONALE.")}

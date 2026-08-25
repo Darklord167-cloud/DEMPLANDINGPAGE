@@ -1,6 +1,5 @@
 import { CommandCenter } from "@/components/sections/CommandCenter";
-import { MarketTelemetry } from "@/components/MarketTelemetry";
-import { RealTimeTradeStream } from "@/components/RealTimeTradeStream";
+import { DexTerminal } from "@/components/dex/DexTerminal";
 import { PortfolioAnalytics } from "@/components/PortfolioAnalytics";
 import { TokenomicsVisualizer } from "@/components/TokenomicsVisualizer";
 import { TerminalSquare } from "lucide-react";
@@ -26,7 +25,7 @@ export default function CommandCenterPage() {
             </h1>
             <p className="mt-3 text-zinc-400 font-mono text-sm max-w-2xl flex items-center gap-2">
               <span className="text-purple-400 animate-pulse">_&gt;</span> 
-              Remote deployment and telemetry control for the Dark Empire Trading Engine.
+              Remote deployment, DEX trading aggregator, and telemetry control for Dark Empire.
             </p>
           </div>
 
@@ -39,26 +38,19 @@ export default function CommandCenterPage() {
           </div>
         </div>
 
-        {/* Feature #4: Personal Web3 PnL & Portfolio Analytics */}
+        {/* Feature #1: Full DEX Trading Terminal with Jupiter v6 & Candlesticks */}
+        <DexTerminal />
+
+        {/* Feature #2: Personal Web3 PnL & Portfolio Analytics */}
         <PortfolioAnalytics />
         
-        {/* Core Control Interactivity Matrix */}
+        {/* Core Bot Control Interactivity Matrix */}
         <div className="bg-zinc-950/40 backdrop-blur-md rounded-2xl border border-purple-500/20 p-2 shadow-xl">
           <CommandCenter />
         </div>
 
         {/* Interactive Tokenomics & Staking Visualizer */}
         <TokenomicsVisualizer />
-
-        {/* Live DEX Chart & Real-Time Trade Stream Terminal Section */}
-        <div className="pt-4 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          <div className="lg:col-span-2">
-            <MarketTelemetry height={520} title="$DEMP Command Center Market Telemetry" />
-          </div>
-          <div className="lg:col-span-1">
-            <RealTimeTradeStream height={520} />
-          </div>
-        </div>
         
       </div>
     </div>
